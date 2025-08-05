@@ -182,7 +182,7 @@ spy:
 
 ### 📝 **Клонирование репозитория:**
 ```
-git clone https://github.com/yourusername/fcchat.git
+git clone https://github.com/fcplugins-dev/fcchat.git
 cd fcchat
 ```
 
