@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-v1.3-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
 [![Minecraft](https://img.shields.io/badge/minecraft-1.16+-orange.svg?style=for-the-badge)](https://minecraft.net)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Discord](https://img.shields.io/badge/telegram-join-7289da.svg?style=for-the-badge)](https://discord.gg/yourserver)
+[![Discord](https://img.shields.io/badge/telegram-join-7289da.svg?style=for-the-badge)](https://fcplugins_minecraft)
 
 ---
 
