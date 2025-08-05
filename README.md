@@ -178,6 +178,15 @@ spy:
 - **📱 Telegram**: [@fcPlugins](https://t.me/fcplugins_minecraft)
 - **📧 Email**: support@fcplugins.xyz
 
+🛠️ Исходный код для разработчиков
+Клонирование репозитория:
+bashgit clone https://github.com/yourusername/fcchat.git
+cd fcchat
+Сборка проекта:
+bash# Используя Maven
+mvn clean package
+
+
 ---
 
 </div>
