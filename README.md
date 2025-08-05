@@ -179,9 +179,10 @@ spy:
 - **📧 Email**: support@fcplugins.xyz
 
 🛠️ Исходный код для разработчиков
-```
+
 Клонирование репозитория:
-bashgit clone https://github.com/yourusername/fcchat.git
+```
+git clone https://github.com/yourusername/fcchat.git
 cd fcchat
 ```
 
