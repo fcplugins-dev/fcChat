@@ -1,0 +1,45 @@
+chat:
+  enabled: true
+  prefix: "!"
+
+local-chat:
+  radius: 100
+  format: "&bⓁ %prefix%&f {player} %suffix%&b: &f{message}"
+
+global-chat:
+  format: "&6Ⓖ %prefix%&f {player} %suffix%&6: &f{message}"
+
+copy:
+  enabled: true
+  permission: "fcchat.copy"
+
+color-chat:
+  enabled: true
+  permission: "fcchat.color"
+
+hidden-text:
+  enabled: true
+  permission: "fcchat.hidden"
+  symbol: "█"
+  length: 7
+
+player-info:
+  enabled: true
+  permission: "fcchat.info"
+  lines:
+    - "&fИнформация игрока&7: %player_name%"
+    - "&f"
+    - "&fЗашёл: &7%player_last_played_formatted%"
+    - "&fСтрана: &7%player_locale_country%"
+    - "&fАйпи: &7%player_ip%"
+    - "&fПинг: &7%player_ping%"
+
+discord:
+  enabled: false
+  webhook-url: ""
+  message-format: "{player}: {message}"
+
+spy:
+  enabled: true
+  permission: "fcchat.spy"
+  message-format: "&8Ⓢ &7{formatted}"

@@ -1,0 +1,28 @@
+filter:
+  enabled: true
+  mode: "partial"                    # Режимы фильтрации:
+                                     # "partial" - неполное скрытие (п****е)
+                                     # "full" - полное скрытие (******)
+                                     # "custom" - замена на кастомное слово
+  symbol: "*"                        # Символ для замены (для partial и full режимов)
+  custom-replacement: "***"          # Кастомная замена (для custom режима)
+  bad-words:
+    - "тварь"
+    - "пидор"
+    - "мразь"
+
+link-blocking:
+  enabled: true
+ip-blocking:
+  enabled: true
+blocked-message: "&c[⚠] &fСсылки и IP-адресса &cзапрещены!"
+
+anti-spam:
+  enabled: true
+  cooldown: 3
+  message: "&c[⚠] &fВы сможете писать повторно через&c: {time} &fсек&c."
+
+new-player-chat:
+  enabled: true
+  block-time: 300
+  message: "&c[⚠] &fВы получите доcтуп к чату через&c: {time} &fсек&c."

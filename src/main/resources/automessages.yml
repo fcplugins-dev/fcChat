@@ -1,0 +1,18 @@
+automessages: true
+interval: 300
+mode: random
+
+messages_1:
+  sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  messages:
+    - "&9&n▌&f"
+    - "&9&n▌&f Наш плагин полностью &9бесплатный."
+    - "&9&n▌&f Ссылка на нашу студию&9: {https://t.me/fcplugins_minecraft:&9Ссылка}"
+    - "&9&n▌&f"
+messages_2:
+  sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  messages:
+    - "&9&n▌&f"
+    - "&9&n▌&f Плагин так-же &9поддерживает,"
+    - "&9&n▌&f Кликабельные команды&9: {/help:&9Нажми}"
+    - "&9&n▌&f"

@@ -1,0 +1,54 @@
+name: fcChat
+version: '${project.version}'
+main: fc.plugins.fcchat.FcChat
+api-version: '1.16'
+prefix: fcChat
+softdepend: [PlaceholderAPI, LuckPerms]
+authors: [fcPlugins]
+description: Многофункциональный плагин на чат
+website: https://t.me/fcplugins_minecraft
+commands:
+  fcchat:
+    description: Команда управления плагином
+    permission: fcchat.use
+permissions:
+  fcchat.use:
+    description: Позволяет использовать основные команды плагина
+    default: true
+  fcchat.reload:
+    description: Позволяет перезагружать конфигурацию плагина
+    default: op
+  fcchat.spy:
+    description: Позволяет использовать функцию spy для просмотра приватных сообщений
+    default: op
+  fcchat.hidden:
+    description: Позволяет использовать маскировку сообщения
+    default: op
+  fcchat.copy:
+    description: Позволяет копировать текст с чата
+    default: op
+  fcchat.color:
+    description: Позволяет использовать hex цвета в чате
+    default: op
+  fcchat.read:
+    description: Позволяет посмотреть заблокированное сообщение ховером
+    default: op
+  fcchat.info:
+    description: Позволяет посмотреть информацию про игрока ховером
+    default: op
+  fcchat.bypass:
+    description: Позволяет обходить ограничения плагина
+    default: op
+  fcchat.admin:
+    description: Полные права администратора плагина
+    default: op
+    children:
+      fcchat.use: true
+      fcchat.reload: true
+      fcchat.spy: true
+      fcchat.hidden: true
+      fcchat.copy: true
+      fcchat.color: true
+      fcchat.read: true
+      fcchat.info: true
+      fcchat.bypass: true

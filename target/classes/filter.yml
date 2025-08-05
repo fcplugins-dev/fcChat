@@ -1,0 +1,9 @@
+filter:
+  enabled: true
+  mode: "partial"                    # Режимы: "partial", "full", "custom"
+  symbol: "*"                        # Символ для замены (для partial и full режимов)
+  custom-replacement: "***"          # Кастомная замена (для custom режима)
+  bad-words:
+    - "тварь"
+    - "мразь"
+    - "сволочь"
