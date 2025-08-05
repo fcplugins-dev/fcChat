@@ -1,13 +1,9 @@
 # 💬 fcChat - Революция в мире чата Minecraft
 
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
-[![Minecraft](https://img.shields.io/badge/minecraft-1.19+-orange.svg?style=for-the-badge)](https://minecraft.net)
+[![Version](https://img.shields.io/badge/version-v1.3-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
+[![Minecraft](https://img.shields.io/badge/minecraft-1.16+-orange.svg?style=for-the-badge)](https://minecraft.net)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![Discord](https://img.shields.io/badge/discord-join-7289da.svg?style=for-the-badge)](https://discord.gg/yourserver)
-
-<div align="center">
-  <img src="https://via.placeholder.com/800x200/4f46e5/ffffff?text=fcChat+-+Многофункциональный+чат+плагин" alt="fcChat Banner"/>
-</div>
 
 ---
 
