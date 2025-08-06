@@ -1,6 +1,6 @@
 # 💬 fcChat - Революция в мире чата Minecraft
 
-[![Version](https://img.shields.io/badge/version-v1.3-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
+[![Version](https://img.shields.io/badge/version-v1.5-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
 [![Minecraft](https://img.shields.io/badge/minecraft-1.16+-orange.svg?style=for-the-badge)](https://minecraft.net)
 [![Telegram](https://img.shields.io/badge/telegram-join-7289da.svg?style=for-the-badge)](https://t.me/fcplugins_minecraft)
 
