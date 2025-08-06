@@ -71,89 +71,87 @@ public class ConfigManager {
         }
     }
 
-    public boolean isChatEnabled() {
-        return config.getBoolean("chat.enabled", true);
-    }
-
     public int getLocalChatRadius() {
-        return config.getInt("local-chat.radius", 100);
+        return config.getInt("local-chat.radius");
     }
 
     public String getChatPrefix() {
-        return config.getString("chat.prefix", "!");
+        return config.getString("chat.prefix");
     }
 
     public String getLocalChatFormat() {
-        return config.getString("local-chat.format", "&7[&bЛокальный&7] &f{player}: &7{message}");
+        return config.getString("local-chat.format");
     }
 
     public String getGlobalChatFormat() {
-        return config.getString("global-chat.format", "&7[&aГлобальный&7] &f{player}: &7{message}");
+        return config.getString("global-chat.format");
     }
 
     public String getCopyPermission() {
-        return config.getString("copy.permission", "fcchat.copy");
+        return config.getString("copy.permission");
     }
 
     public boolean isColorChatEnabled() {
-        return config.getBoolean("color-chat.enabled", true);
+        return config.getBoolean("color-chat.enabled");
     }
 
     public String getColorChatPermission() {
-        return config.getString("color-chat.permission", "fcchat.color");
+        return config.getString("color-chat.permission");
     }
 
     public boolean isHiddenTextEnabled() {
-        return config.getBoolean("hidden-text.enabled", true);
+        return config.getBoolean("hidden-text.enabled");
     }
 
     public String getHiddenTextPermission() {
-        return config.getString("hidden-text.permission", "fcchat.hidden");
+        return config.getString("hidden-text.permission");
     }
 
     public String getHiddenTextSymbol() {
-        return config.getString("hidden-text.symbol", "█");
+        return config.getString("hidden-text.symbol");
     }
 
     public int getHiddenTextLength() {
-        return config.getInt("hidden-text.length", 7);
+        return config.getInt("hidden-text.length");
     }
 
     public boolean isCopyEnabled() {
-        return config.getBoolean("copy.enabled", true);
+        return config.getBoolean("copy.enabled");
     }
 
     public boolean isAntiSpamEnabled() {
-        return moderation.getBoolean("anti-spam.enabled", true);
+        return moderation.getBoolean("anti-spam.enabled");
     }
 
     public double getAntiSpamCooldown() {
-        return moderation.getDouble("anti-spam.cooldown", 3.0);
+        return moderation.getDouble("anti-spam.cooldown");
     }
 
     public String getAntiSpamMessage() {
-        return moderation.getString("anti-spam.message", "&cНе спамьте! Подождите {time} секунд.");
+        return moderation.getString("anti-spam.message");
     }
 
     public boolean isNewPlayerChatEnabled() {
-        return moderation.getBoolean("new-player-chat.enabled", true);
+        return moderation.getBoolean("new-player-chat.enabled");
     }
 
     public int getNewPlayerBlockTime() {
-        return moderation.getInt("new-player-chat.block-time", 300);
+        return moderation.getInt("new-player-chat.block-time");
     }
 
     public String getNewPlayerMessage() {
-        return moderation.getString("new-player-chat.message", "&cЧат заблокирован для новых игроков на {time} секунд.");
+        return moderation.getString("new-player-chat.message");
     }
 
     public String getAntiSpamBypassPermission() {
-        return moderation.getString("anti-spam.bypass-permission", "fcchat.antispam.bypass");
+        return moderation.getString("anti-spam.bypass-permission");
     }
 
     public String getNewPlayerBypassPermission() {
-        return moderation.getString("new-player-chat.bypass-permission", "fcchat.newplayer.bypass");
+        return moderation.getString("new-player-chat.bypass-permission");
     }
+
+
 
     public LuckPermsIntegration getLuckPermsIntegration() {
         return luckPermsIntegration;
@@ -168,35 +166,35 @@ public class ConfigManager {
     }
 
     public boolean isDiscordEnabled() {
-        return config.getBoolean("discord.enabled", false);
+        return config.getBoolean("discord.enabled");
     }
 
     public String getDiscordWebhookUrl() {
-        return config.getString("discord.webhook-url", "");
+        return config.getString("discord.webhook-url");
     }
 
     public String getDiscordMessageFormat() {
-        return config.getString("discord.message-format", "{player}: {message}");
+        return config.getString("discord.message-format");
     }
 
     public boolean isSpyEnabled() {
-        return config.getBoolean("spy.enabled", true);
+        return config.getBoolean("spy.enabled");
     }
 
     public String getSpyPermission() {
-        return config.getString("spy.permission", "fcchat.spy");
+        return config.getString("spy.permission");
     }
 
     public String getSpyMessageFormat() {
-        return config.getString("spy.message-format", "&8[&cSPY&8] &7{formatted}");
+        return config.getString("spy.message-format");
     }
 
     public boolean isPlayerInfoEnabled() {
-        return config.getBoolean("player-info.enabled", true);
+        return config.getBoolean("player-info.enabled");
     }
 
     public String getPlayerInfoPermission() {
-        return config.getString("player-info.permission", "fcchat.info");
+        return config.getString("player-info.permission");
     }
 
     public List<String> getPlayerInfoLines() {
@@ -206,4 +204,8 @@ public class ConfigManager {
     public FcChat getPlugin() {
         return plugin;
     }
-} 
+
+    public boolean updateCheck() {
+        return config.getBoolean("update-check");
+    }
+}

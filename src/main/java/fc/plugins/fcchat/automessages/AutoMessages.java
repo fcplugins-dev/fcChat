@@ -2,7 +2,6 @@ package fc.plugins.fcchat.automessages;
 
 import fc.plugins.fcchat.FcChat;
 import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -104,7 +103,7 @@ public class AutoMessages {
     }
 
     private MessageGroup getNextMessageGroup() {
-        int currentIndex = config.getInt("current_index", 1);
+        int currentIndex = config.getInt("current_index");
         
         String key = "messages_" + currentIndex;
         MessageGroup group = getMessageGroup(key);
@@ -143,7 +142,7 @@ public class AutoMessages {
         }
         
         List<String> messages = config.getStringList(key + ".messages");
-        String sound = config.getString(key + ".sound", "ENTITY_EXPERIENCE_ORB_PICKUP");
+        String sound = config.getString(key + ".sound");
         
         if (messages.isEmpty()) {
             return null;
@@ -232,14 +231,14 @@ public class AutoMessages {
     }
 
     public boolean isEnabled() {
-        return config.getBoolean("automessages", true);
+        return config.getBoolean("automessages");
     }
 
     public int getInterval() {
-        return config.getInt("interval", 300);
+        return config.getInt("interval");
     }
 
     public String getMode() {
-        return config.getString("mode", "random");
+        return config.getString("mode");
     }
 } 

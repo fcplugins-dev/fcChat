@@ -5,7 +5,6 @@ import fc.plugins.fcchat.FcChat;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +32,9 @@ public class ChatTabCompleter implements TabCompleter {
                     completions.add("spy");
                 }
                 completions.add("channel");
+                if (sender.hasPermission("fcchat.clear")) {
+                    completions.add("clear");
+                }
             } else if (args.length == 2 && args[0].equalsIgnoreCase("spy")) {
                 if (sender.hasPermission(configManager.getSpyPermission())) {
                     completions.add("on");

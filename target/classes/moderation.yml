@@ -21,8 +21,10 @@ anti-spam:
   enabled: true
   cooldown: 3
   message: "&c[⚠] &fВы сможете писать повторно через&c: {time} &fсек&c."
+  bypass-permission: "fcchat.bypass"
 
 new-player-chat:
   enabled: true
   block-time: 300
   message: "&c[⚠] &fВы получите доcтуп к чату через&c: {time} &fсек&c."
+  bypass-permission: "fcchat.bypass"

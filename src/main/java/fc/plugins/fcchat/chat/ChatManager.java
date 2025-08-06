@@ -141,6 +141,10 @@ public class ChatManager implements Listener {
         return spyFunction;
     }
 
+    public PlayerTimeManager getPlayerTimeManager() {
+        return playerTimeManager;
+    }
+
         private void handleLocalChat(Player sender, String message) {
         String filteredMessage = filter.filterMessage(message, sender);
         String processedMessage = MessageProcessor.processHiddenText(filteredMessage, configManager);

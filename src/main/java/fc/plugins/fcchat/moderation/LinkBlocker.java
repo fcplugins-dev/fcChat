@@ -31,15 +31,15 @@ public class LinkBlocker {
     }
 
     public boolean isLinkBlockingEnabled() {
-        return moderationConfig.getBoolean("link-blocking.enabled", true);
+        return moderationConfig.getBoolean("link-blocking.enabled");
     }
 
     public boolean isIPBlockingEnabled() {
-        return moderationConfig.getBoolean("ip-blocking.enabled", true);
+        return moderationConfig.getBoolean("ip-blocking.enabled");
     }
 
     public String getBlockedMessage() {
-        return moderationConfig.getString("blocked-message", "&cСсылки и IP адреса запрещены!");
+        return moderationConfig.getString("blocked-message");
     }
 
     public boolean containsLinks(String message) {

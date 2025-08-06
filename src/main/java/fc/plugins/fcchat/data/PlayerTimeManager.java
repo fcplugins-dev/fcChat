@@ -1,6 +1,7 @@
 package fc.plugins.fcchat.data;
 
 import fc.plugins.fcchat.FcChat;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ public class PlayerTimeManager {
         this.plugin = plugin;
         this.playtimeFile = new File(plugin.getDataFolder(), "data/playtime.yml");
         loadPlaytimeData();
+        loadOnlinePlayersOnStartup();
     }
 
     private void loadPlaytimeData() {
@@ -32,6 +34,14 @@ public class PlayerTimeManager {
             }
         }
         playtimeConfig = YamlConfiguration.loadConfiguration(playtimeFile);
+    }
+
+    private void loadOnlinePlayersOnStartup() {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                onPlayerJoin(player);
+            }
+        }, 1L);
     }
 
     public void onPlayerJoin(Player player) {
@@ -53,7 +63,7 @@ public class PlayerTimeManager {
     }
 
     public long getTotalPlaytime(UUID playerId) {
-        return playtimeConfig.getLong("players." + playerId.toString() + ".total-time", 0L);
+        return playtimeConfig.getLong("players." + playerId.toString() + ".total-time");
     }
 
     public long getSessionPlaytime(Player player) {

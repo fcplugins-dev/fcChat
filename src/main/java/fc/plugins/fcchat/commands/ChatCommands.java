@@ -4,13 +4,13 @@ import fc.plugins.fcchat.FcChat;
 import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.function.Spy;
 import fc.plugins.fcchat.utils.HexUtils;
-import org.bukkit.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class ChatCommands implements CommandExecutor {
+public class  ChatCommands implements CommandExecutor {
     private final FcChat plugin;
     private final ConfigManager configManager;
     private final Spy spyFunction;
@@ -87,6 +87,18 @@ public class ChatCommands implements CommandExecutor {
                 plugin.getChatManager().getChannelManager().setPlayerChannel(player.getUniqueId(), channelId);
                 String message = configManager.getMessage("channel.switched").replace("{channel}", channelId);
                 sender.sendMessage(HexUtils.translateAlternateColorCodes(message));
+                return true;
+            } else if (args[0].equalsIgnoreCase("clear")) {
+                if (!sender.hasPermission("fcchat.clear")) {
+                    sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("no-permission")));
+                    return true;
+                }
+                
+                for (int i = 0; i < 100; i++) {
+                    Bukkit.broadcastMessage("");
+                }
+                String clearMessage = configManager.getMessage("clear-chat").replace("{player}", sender.getName());
+                Bukkit.broadcastMessage(HexUtils.translateAlternateColorCodes(clearMessage));
                 return true;
             } else {
                 sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("unknown-command")));

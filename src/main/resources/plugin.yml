@@ -39,6 +39,9 @@ permissions:
   fcchat.bypass:
     description: Позволяет обходить ограничения плагина
     default: op
+  fcchat.clear:
+    description: Позволяет очищать чат
+    default: op
   fcchat.admin:
     description: Полные права администратора плагина
     default: op
@@ -52,3 +55,4 @@ permissions:
       fcchat.read: true
       fcchat.info: true
       fcchat.bypass: true
+      fcchat.clear: true

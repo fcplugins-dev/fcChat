@@ -1,5 +1,5 @@
 name: fcChat
-version: '1.1-Build'
+version: 'v1.5'
 main: fc.plugins.fcchat.FcChat
 api-version: '1.16'
 prefix: fcChat
@@ -39,6 +39,9 @@ permissions:
   fcchat.bypass:
     description: Позволяет обходить ограничения плагина
     default: op
+  fcchat.clear:
+    description: Позволяет очищать чат
+    default: op
   fcchat.admin:
     description: Полные права администратора плагина
     default: op
@@ -52,3 +55,4 @@ permissions:
       fcchat.read: true
       fcchat.info: true
       fcchat.bypass: true
+      fcchat.clear: true

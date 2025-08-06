@@ -4,7 +4,6 @@ import fc.plugins.fcchat.config.ConfigManager;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
-import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
 import java.util.List;

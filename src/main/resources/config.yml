@@ -43,3 +43,5 @@ spy:
   enabled: true
   permission: "fcchat.spy"
   message-format: "&8Ⓢ &7{formatted}"
+
+update-check: true

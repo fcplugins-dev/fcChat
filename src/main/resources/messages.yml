@@ -14,3 +14,6 @@ channel:
   not-found: "&6[⚠] &fКанал не найден&6!"
   usage: "&6[⚠] &fИспользование&6: /&ffcchat channel &6<&fid&6>"
   players-only: "&6[⚠] &fЭта команда &6только &fдля игроков&6!"
+
+clear-chat: "&a[✔] &fЧат очищен администратором &a{player}"
+

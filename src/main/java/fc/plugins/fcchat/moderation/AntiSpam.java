@@ -24,7 +24,8 @@ public class AntiSpam {
             return false;
         }
 
-        if (player.hasPermission(configManager.getAntiSpamBypassPermission())) {
+        String bypassPermission = configManager.getAntiSpamBypassPermission();
+        if (bypassPermission != null && player.hasPermission(bypassPermission)) {
             return false;
         }
 
@@ -46,7 +47,8 @@ public class AntiSpam {
             return false;
         }
 
-        if (player.hasPermission(configManager.getNewPlayerBypassPermission())) {
+        String bypassPermission = configManager.getNewPlayerBypassPermission();
+        if (bypassPermission != null && player.hasPermission(bypassPermission)) {
             return false;
         }
 
