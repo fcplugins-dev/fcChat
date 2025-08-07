@@ -1,6 +1,6 @@
 channels:
   admin:
-    name: "Админ"
+    name: "Admin"
     format: "&cⒶ &f{player} &f%suffix%: &7{message}"
     permission: "fcchat.channel.admin"
     enabled: true

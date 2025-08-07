@@ -119,6 +119,10 @@ public class ConfigManager {
         return config.getBoolean("copy.enabled");
     }
 
+    public String getCopyHoverText() {
+        return config.getString("copy.hover-text");
+    }
+
     public boolean isAntiSpamEnabled() {
         return moderation.getBoolean("anti-spam.enabled");
     }
@@ -201,11 +205,37 @@ public class ConfigManager {
         return config.getStringList("player-info.lines");
     }
 
+
+
     public FcChat getPlugin() {
         return plugin;
     }
 
     public boolean updateCheck() {
         return config.getBoolean("update-check");
+    }
+
+    public List<String> getDisabledWorlds() {
+        return config.getStringList("disabled-worlds");
+    }
+
+    public boolean isJoinLeaveMessagesEnabled() {
+        return config.getBoolean("join-leave-messages.enabled");
+    }
+
+    public String getJoinMessage() {
+        return config.getString("join-leave-messages.join.message");
+    }
+
+    public String getJoinSound() {
+        return config.getString("join-leave-messages.join.sound");
+    }
+
+    public String getLeaveMessage() {
+        return config.getString("join-leave-messages.leave.message");
+    }
+
+    public String getLeaveSound() {
+        return config.getString("join-leave-messages.leave.sound");
     }
 }

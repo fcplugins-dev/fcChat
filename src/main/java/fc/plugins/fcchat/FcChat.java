@@ -9,6 +9,9 @@ import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.data.PlayerTimeManager;
 import fc.plugins.fcchat.function.Copy;
 import fc.plugins.fcchat.listeners.UpdateListener;
+import fc.plugins.fcchat.listeners.JoinLeaveListener;
+import fc.plugins.fcchat.database.MySQLManager;
+import fc.plugins.fcchat.sync.MessageSynchronizer;
 import fc.plugins.fcchat.utils.Metrics;
 import fc.plugins.fcchat.utils.Updater;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,13 +28,17 @@ public final class FcChat extends JavaPlugin {
     private AutoMessages autoMessages;
     private Updater updater;
     private ChatGame chatGame;
+    private MySQLManager mysqlManager;
+    private MessageSynchronizer messageSynchronizer;
 
     @Override
     public void onEnable() {
         configManager = new ConfigManager(this);
         playerTimeManager = new PlayerTimeManager(this);
         copyFunction = new Copy(configManager);
-        chatManager = new ChatManager(this, configManager, playerTimeManager);
+        mysqlManager = new MySQLManager(this);
+        messageSynchronizer = new MessageSynchronizer(this, mysqlManager);
+        chatManager = new ChatManager(this, configManager, playerTimeManager, messageSynchronizer);
         chatCommands = new ChatCommands(this, configManager);
         chatTabCompleter = new ChatTabCompleter(configManager, this);
         autoMessages = new AutoMessages(this);
@@ -42,6 +49,7 @@ public final class FcChat extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chatManager, this);
         getServer().getPluginManager().registerEvents(chatGame, this);
         getServer().getPluginManager().registerEvents(new UpdateListener(this), this);
+        getServer().getPluginManager().registerEvents(new JoinLeaveListener(configManager), this);
         getCommand("fcchat").setExecutor(chatCommands);
         getCommand("fcchat").setTabCompleter(chatTabCompleter);
 
@@ -79,5 +87,19 @@ public final class FcChat extends JavaPlugin {
         if (chatGame != null) {
             chatGame.stop();
         }
+        if (messageSynchronizer != null) {
+            messageSynchronizer.stop();
+        }
+        if (mysqlManager != null) {
+            mysqlManager.disconnect();
+        }
+    }
+
+    public MessageSynchronizer getMessageSynchronizer() {
+        return messageSynchronizer;
+    }
+
+    public MySQLManager getMySQLManager() {
+        return mysqlManager;
     }
 } 

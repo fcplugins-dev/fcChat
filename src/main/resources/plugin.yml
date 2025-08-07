@@ -5,45 +5,45 @@ api-version: '1.16'
 prefix: fcChat
 softdepend: [PlaceholderAPI, LuckPerms]
 authors: [fcPlugins]
-description: Многофункциональный плагин на чат
+description: Multifunctional chat plugin
 website: https://t.me/fcplugins_minecraft
 commands:
   fcchat:
-    description: Команда управления плагином
+    description: Plugin management command
     permission: fcchat.use
 permissions:
   fcchat.use:
-    description: Позволяет использовать основные команды плагина
+    description: Allows using basic plugin commands
     default: true
   fcchat.reload:
-    description: Позволяет перезагружать конфигурацию плагина
+    description: Allows reloading plugin configuration
     default: op
   fcchat.spy:
-    description: Позволяет использовать функцию spy для просмотра приватных сообщений
+    description: Allows using spy function to view private messages
     default: op
   fcchat.hidden:
-    description: Позволяет использовать маскировку сообщения
+    description: Allows using message masking
     default: op
   fcchat.copy:
-    description: Позволяет копировать текст с чата
+    description: Allows copying text from chat
     default: op
   fcchat.color:
-    description: Позволяет использовать hex цвета в чате
+    description: Allows using hex colors in chat
     default: op
   fcchat.read:
-    description: Позволяет посмотреть заблокированное сообщение ховером
+    description: Allows viewing blocked messages on hover
     default: op
   fcchat.info:
-    description: Позволяет посмотреть информацию про игрока ховером
+    description: Allows viewing player information on hover
     default: op
   fcchat.bypass:
-    description: Позволяет обходить ограничения плагина
+    description: Allows bypassing plugin restrictions
     default: op
   fcchat.clear:
-    description: Позволяет очищать чат
+    description: Allows clearing chat
     default: op
   fcchat.admin:
-    description: Полные права администратора плагина
+    description: Full plugin administrator rights
     default: op
     children:
       fcchat.use: true

@@ -22,7 +22,7 @@ public class ChatTabCompleter implements TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
-        
+
         if (command.getName().equalsIgnoreCase("fcchat")) {
             if (args.length == 1) {
                 if (sender.hasPermission("fcchat.reload")) {
@@ -51,7 +51,7 @@ public class ChatTabCompleter implements TabCompleter {
                 }
             }
         }
-        
+
         return completions;
     }
-} 
+}

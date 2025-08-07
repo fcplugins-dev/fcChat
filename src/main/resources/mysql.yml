@@ -1,0 +1,21 @@
+mysql:
+  enabled: false
+  host: "fcchat"
+  port: 3306
+  database: "database"
+  username: "root"
+  password: ""
+  table-prefix: "fcchat_"
+
+sync:
+  enabled: true
+  server-name: "server1" # IMPORTANT: specify a unique name on each server!
+  sync-channels:
+    - "global" # Only global is temporarily available!
+
+# (not recommended to change)
+connection:
+  max-pool-size: 10
+  connection-timeout: 30000
+  idle-timeout: 600000
+  max-lifetime: 1800000

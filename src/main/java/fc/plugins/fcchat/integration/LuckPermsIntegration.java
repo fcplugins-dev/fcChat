@@ -2,9 +2,6 @@ package fc.plugins.fcchat.integration;
 
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.NodeType;
-import net.luckperms.api.node.types.PrefixNode;
-import net.luckperms.api.node.types.SuffixNode;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -68,4 +65,6 @@ public class LuckPermsIntegration {
         String suffix = getSuffix(player);
         return suffix != null ? suffix : defaultValue;
     }
-} 
+
+
+}

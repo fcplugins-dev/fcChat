@@ -5,6 +5,7 @@ import fc.plugins.fcchat.channel.ChannelManager;
 import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.data.PlayerTimeManager;
 import fc.plugins.fcchat.function.Copy;
+import fc.plugins.fcchat.sync.MessageSynchronizer;
 import fc.plugins.fcchat.function.Spy;
 import fc.plugins.fcchat.integration.LuckPermsIntegration;
 import fc.plugins.fcchat.integration.PlaceholderAPIIntegration;
@@ -30,17 +31,19 @@ public class ChatManager implements Listener {
     private final PlayerTimeManager playerTimeManager;
     private final ChannelManager channelManager;
     private final Copy copyFunction;
+    private final MessageSynchronizer messageSynchronizer;
     private final Spy spyFunction;
     private final Filter filter;
     private final LinkBlocker linkBlocker;
     private final AntiSpam antiSpam;
     private final PlayerInfoManager playerInfoManager;
 
-    public ChatManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager) {
+    public ChatManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.playerTimeManager = playerTimeManager;
-        this.channelManager = new ChannelManager(plugin, configManager, playerTimeManager);
+        this.messageSynchronizer = messageSynchronizer;
+        this.channelManager = new ChannelManager(plugin, configManager, playerTimeManager, messageSynchronizer);
         this.copyFunction = new Copy(configManager);
         this.spyFunction = new Spy(configManager);
         this.filter = new Filter(configManager);
@@ -54,6 +57,11 @@ public class ChatManager implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage();
         String prefix = configManager.getChatPrefix();
+
+        if (configManager.getDisabledWorlds().contains(player.getWorld().getName())) {
+            event.setCancelled(true);
+            return;
+        }
 
         boolean hasBypass = player.hasPermission("fcchat.bypass");
 
@@ -163,7 +171,6 @@ public class ChatManager implements Listener {
                 player.spigot().sendMessage(finalComponent);
             }
         }
-
         DiscordIntegration discord = configManager.getDiscordIntegration();
         if (discord.isEnabled()) {
             discord.sendMessage(sender, filteredMessage);
@@ -187,6 +194,8 @@ public class ChatManager implements Listener {
             TextComponent finalComponent = createFinalMessageComponent(formattedMessage, filteredMessage, message, sender, player);
             player.spigot().sendMessage(finalComponent);
         }
+
+        messageSynchronizer.syncGlobalMessage(sender, filteredMessage);
 
         DiscordIntegration discord = configManager.getDiscordIntegration();
         if (discord.isEnabled()) {

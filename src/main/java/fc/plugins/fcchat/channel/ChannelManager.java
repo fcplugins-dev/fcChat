@@ -5,6 +5,7 @@ import fc.plugins.fcchat.chat.MessageProcessor;
 import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.data.PlayerTimeManager;
 import fc.plugins.fcchat.function.Copy;
+import fc.plugins.fcchat.sync.MessageSynchronizer;
 import fc.plugins.fcchat.function.Spy;
 import fc.plugins.fcchat.integration.LuckPermsIntegration;
 import fc.plugins.fcchat.integration.PlaceholderAPIIntegration;
@@ -32,6 +33,7 @@ public class ChannelManager {
     private final ConfigManager configManager;
     private final PlayerTimeManager playerTimeManager;
     private final Copy copyFunction;
+    private final MessageSynchronizer messageSynchronizer;
     private final Spy spyFunction;
     private final Filter filter;
     private final LinkBlocker linkBlocker;
@@ -41,10 +43,11 @@ public class ChannelManager {
     private File channelFile;
     private FileConfiguration channelConfig;
 
-    public ChannelManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager) {
+    public ChannelManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.playerTimeManager = playerTimeManager;
+        this.messageSynchronizer = messageSynchronizer;
         this.copyFunction = new Copy(configManager);
         this.spyFunction = new Spy(configManager);
         this.filter = new Filter(configManager);

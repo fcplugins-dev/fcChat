@@ -93,7 +93,7 @@ public class Metrics {
     }
 
     public Metrics(Plugin plugin) {
-        this(plugin, 0); // 0 - дефолтный pluginId
+        this(plugin, 0);
     }
 
     public boolean isEnabled() {

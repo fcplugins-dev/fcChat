@@ -22,18 +22,18 @@ public class Updater {
         if (plugin.getConfigManager().updateCheck()) {
             this.latestVersion = this.getLatestVersionFromSpigot();
         } else {
-            this.latestVersion = "v1.5";
+            this.latestVersion = "v1.6";
         }
 
         this.currentVersion = plugin.getDescription().getVersion();
-        
+
         if (this.isNewerVersion(this.latestVersion, this.currentVersion)) {
             this.isHasNewerVersion = true;
-            plugin.getLogger().info("§6§l[fcChat] §fДоступнa §6новая §fверсия плагина§6: " + this.latestVersion);
+            plugin.getLogger().info("§6§l[fcChat] §fA §6new §fversion of the plugin is available§6: " + this.latestVersion);
             plugin.getLogger().info("§6https://www.spigotmc.org/resources/fcchat-advanced-chat-management-plugin.127544");
         } else {
             this.isHasNewerVersion = false;
-            plugin.getLogger().info("§a[✔] §fВы используете §aпоследнюю §fверсию плагина§a!");
+            plugin.getLogger().info("§a[✔] §fYou are using the §alatest §fversion of the plugin§a!");
         }
 
     }
@@ -45,14 +45,14 @@ public class Updater {
         } else {
             latest = latestVersion.split("-")[0];
             String current = currentVersion.split("-")[0];
-            
+
             String[] latestParts = latest.split("\\.");
             String[] currentParts = current.split("\\.");
 
             for(int i = 0; i < Math.max(latestParts.length, currentParts.length); ++i) {
                 int latestPart = 0;
                 int currentPart = 0;
-                
+
                 try {
                     String latestStr = i < latestParts.length ? latestParts[i] : "0";
                     if (latestStr.startsWith("v")) {
@@ -62,7 +62,7 @@ public class Updater {
                 } catch (NumberFormatException e) {
                     latestPart = 0;
                 }
-                
+
                 try {
                     String currentStr = i < currentParts.length ? currentParts[i] : "0";
                     if (currentStr.startsWith("v")) {
@@ -72,7 +72,7 @@ public class Updater {
                 } catch (NumberFormatException e) {
                     currentPart = 0;
                 }
-                
+
                 if (latestPart > currentPart) {
                     return true;
                 }
@@ -90,12 +90,12 @@ public class Updater {
         if (!plugin.getConfigManager().updateCheck()) {
             return;
         }
-        
+
         if (this.isHasNewerVersion) {
-            player.sendMessage("§6§l[fcChat] §fДоступнa §6новая §fверсия плагина§6: " + this.latestVersion);
+            player.sendMessage("§6§l[fcChat] §fA §6new §fversion of the plugin is available§6: " + this.latestVersion);
             player.sendMessage("§6https://www.spigotmc.org/resources/fcchat-advanced-chat-management-plugin.127544");
         } else {
-            player.sendMessage("§a§l[fcChat] §fВы используете §aпоследнюю §fверсию плагина§a!");
+            player.sendMessage("§a§l[fcChat] §fYou are using the §alatest §fversion of the plugin§a!");
         }
     }
 

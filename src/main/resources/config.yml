@@ -12,6 +12,7 @@ global-chat:
 copy:
   enabled: true
   permission: "fcchat.copy"
+  hover-text: "&f[Copy message]"
 
 color-chat:
   enabled: true
@@ -27,12 +28,12 @@ player-info:
   enabled: true
   permission: "fcchat.info"
   lines:
-    - "&fИнформация игрока&7: %player_name%"
+    - "&7[⚠] &fPlayer Information&7: %player_name%"
     - "&f"
-    - "&fЗашёл: &7%player_last_played_formatted%"
-    - "&fСтрана: &7%player_locale_country%"
-    - "&fАйпи: &7%player_ip%"
-    - "&fПинг: &7%player_ping%"
+    - "&7» &fJoined&7: %player_last_played_formatted%"
+    - "&7» &fCountry&7: %player_locale_country%"
+    - "&7» &fIP&7: %player_ip%"
+    - "&7» &fPing&7: %player_ping%"
 
 discord:
   enabled: false
@@ -43,5 +44,18 @@ spy:
   enabled: true
   permission: "fcchat.spy"
   message-format: "&8Ⓢ &7{formatted}"
+
+join-leave-messages:
+  enabled: true
+  join:
+    message: "&a&l+ &f%player_name%"
+    sound: "ENTITY_PLAYER_LEVELUP"
+  leave:
+    message: "&c&l- &f%player_name%"
+    sound: "ENTITY_PLAYER_LEVELUP"
+
+disabled-worlds:
+  - "disableWorld1"
+  - "disableWorld2"
 
 update-check: true

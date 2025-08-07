@@ -43,13 +43,13 @@ public class  ChatCommands implements CommandExecutor {
                 if (!(sender instanceof Player)) {
                     return true;
                 }
-                
+
                 Player player = (Player) sender;
                 if (!player.hasPermission(configManager.getSpyPermission())) {
                     sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("spy.no-permission")));
                     return true;
                 }
-                
+
                 if (args.length < 2) {
                     spyFunction.toggleSpy(player);
                 } else if (args[1].equalsIgnoreCase("on")) {
@@ -64,26 +64,26 @@ public class  ChatCommands implements CommandExecutor {
                     sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("channel.players-only")));
                     return true;
                 }
-                
+
                 Player player = (Player) sender;
-                
+
                 if (args.length < 2) {
                     sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("channel.usage")));
                     return true;
                 }
-                
+
                 String channelId = args[1];
                 if (channelId.equalsIgnoreCase("default")) {
                     plugin.getChatManager().getChannelManager().setPlayerChannel(player.getUniqueId(), "default");
                     sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("channel.switched-default")));
                     return true;
                 }
-                
+
                 if (!plugin.getChatManager().getChannelManager().hasChannelPermission(player, channelId)) {
                     sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("channel.no-permission")));
                     return true;
                 }
-                
+
                 plugin.getChatManager().getChannelManager().setPlayerChannel(player.getUniqueId(), channelId);
                 String message = configManager.getMessage("channel.switched").replace("{channel}", channelId);
                 sender.sendMessage(HexUtils.translateAlternateColorCodes(message));
@@ -93,7 +93,7 @@ public class  ChatCommands implements CommandExecutor {
                     sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("no-permission")));
                     return true;
                 }
-                
+
                 for (int i = 0; i < 100; i++) {
                     Bukkit.broadcastMessage("");
                 }
@@ -107,4 +107,4 @@ public class  ChatCommands implements CommandExecutor {
         }
         return false;
     }
-} 
+}
