@@ -98,7 +98,9 @@ public class MessageSynchronizer {
             .replace("%player_name%", syncMessage.playerName);
         formattedMessage = formattedMessage
             .replace("%prefix%", "")
-            .replace("%suffix%", "");
+            .replace("%suffix%", "")
+            .replace("%luckperms_prefix%", "")
+            .replace("%luckperms_suffix%", "");
             
         return HexUtils.translateAlternateColorCodes(formattedMessage);
     }

@@ -2,8 +2,8 @@ package fc.plugins.fcchat.moderation;
 
 import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.data.PlayerTimeManager;
+import fc.plugins.fcchat.utils.HexUtils;
 import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
 
 import java.util.Map;
 import java.util.UUID;
@@ -60,12 +60,12 @@ public class AntiSpam {
 
     public String getAntiSpamMessage(double remainingTime) {
         String message = configManager.getAntiSpamMessage();
-        return ChatColor.translateAlternateColorCodes('&', message.replace("{time}", String.format("%.0f", remainingTime)));
+        return HexUtils.translateAlternateColorCodes(message.replace("{time}", String.format("%.0f", remainingTime)));
     }
 
     public String getNewPlayerMessage(double remainingTime) {
         String message = configManager.getNewPlayerMessage();
-        return ChatColor.translateAlternateColorCodes('&', message.replace("{time}", String.format("%.0f", remainingTime)));
+        return HexUtils.translateAlternateColorCodes(message.replace("{time}", String.format("%.0f", remainingTime)));
     }
 
     public double getRemainingSpamTime(Player player) {

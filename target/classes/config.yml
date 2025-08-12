@@ -1,18 +1,26 @@
+# # # # # # # # # # # # # # # # # # # # # # #
+#                                           #
+#           Плагин сощдан студией           #
+#                fcPlugins                  #
+#     https://t.me/fcplugins_minecraft      #
+#                                           #
+# # # # # # # # # # # # # # # # # # # # # # #
+
 chat:
   enabled: true
   prefix: "!"
 
 local-chat:
   radius: 100
-  format: "&bⓁ %prefix%&f {player} %suffix%&b: &f{message}"
+  format: "&bⓁ %prefix%&f{player}%suffix%&b: &f{message}"
 
 global-chat:
-  format: "&6Ⓖ %prefix%&f {player} %suffix%&6: &f{message}"
+  format: "&6Ⓖ %prefix%&f{player}%suffix%&6: &f{message}"
 
 copy:
   enabled: true
   permission: "fcchat.copy"
-  hover-text: "&f[Copy message]"
+  hover-text: "&7[&fСкопировать сообщение&7]"
 
 color-chat:
   enabled: true
@@ -28,12 +36,12 @@ player-info:
   enabled: true
   permission: "fcchat.info"
   lines:
-    - "&7[⚠] &fPlayer Information&7: %player_name%"
+    - "&7[⚠] &fИнформация игрока&7: %player_name%"
     - "&f"
-    - "&7» &fJoined&7: %player_last_played_formatted%"
-    - "&7» &fCountry&7: %player_locale_country%"
-    - "&7» &fIP&7: %player_ip%"
-    - "&7» &fPing&7: %player_ping%"
+    - "&7» &fЗашёл&7: %player_last_played_formatted%"
+    - "&7» &fСтрана&7: %player_locale_country%"
+    - "&7» &fАйпи&7: %player_ip%"
+    - "&7» &fПинг&7: %player_ping%"
 
 discord:
   enabled: false
@@ -43,19 +51,26 @@ discord:
 spy:
   enabled: true
   permission: "fcchat.spy"
-  message-format: "&8Ⓢ &7{formatted}"
+  message-format: "&9Ⓢ &7{formatted}"
 
 join-leave-messages:
   enabled: true
   join:
-    message: "&a&l+ &f%player_name%"
+    message: "&a&l+&f %player_name%"
     sound: "ENTITY_PLAYER_LEVELUP"
   leave:
-    message: "&c&l- &f%player_name%"
+    message: "&c&l-&f %player_name%"
     sound: "ENTITY_PLAYER_LEVELUP"
 
 disabled-worlds:
   - "disableWorld1"
   - "disableWorld2"
+
+hologram-messages:
+  enabled: false
+  duration: 10
+  max-words-per-line: 6
+  height: 2.5
+  format: "&f{message}"
 
 update-check: true

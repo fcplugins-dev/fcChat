@@ -238,4 +238,24 @@ public class ConfigManager {
     public String getLeaveSound() {
         return config.getString("join-leave-messages.leave.sound");
     }
+    
+    public boolean isHologramMessagesEnabled() {
+        return config.getBoolean("hologram-messages.enabled");
+    }
+    
+    public int getHologramDuration() {
+        return config.getInt("hologram-messages.duration");
+    }
+    
+    public int getHologramMaxWordsPerLine() {
+        return config.getInt("hologram-messages.max-words-per-line");
+    }
+    
+    public double getHologramHeight() {
+        return config.getDouble("hologram-messages.height");
+    }
+    
+    public String getHologramMessageFormat() {
+        return config.getString("hologram-messages.format");
+    }
 }

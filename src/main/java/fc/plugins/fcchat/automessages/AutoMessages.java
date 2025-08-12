@@ -1,10 +1,10 @@
 package fc.plugins.fcchat.automessages;
 
 import fc.plugins.fcchat.FcChat;
+import fc.plugins.fcchat.utils.HexUtils;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -206,28 +206,47 @@ public class AutoMessages {
                 TextComponent component = new TextComponent();
                 
                 if (!before.isEmpty()) {
-                    component.addExtra(new TextComponent(ChatColor.translateAlternateColorCodes('&', before)));
+                    String translatedBefore = HexUtils.translateAlternateColorCodes(before);
+                    if (translatedBefore != null) {
+                        net.md_5.bungee.api.chat.BaseComponent[] beforeComponents = TextComponent.fromLegacyText(translatedBefore);
+                        component.addExtra(new TextComponent(beforeComponents));
+                    }
                 }
                 
-                TextComponent clickableText = new TextComponent(ChatColor.translateAlternateColorCodes('&', text));
-                
-                if (url.startsWith("http")) {
-                    clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-                } else {
-                    clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, url));
+                String translatedText = HexUtils.translateAlternateColorCodes(text);
+                if (translatedText != null) {
+                    net.md_5.bungee.api.chat.BaseComponent[] textComponents = TextComponent.fromLegacyText(translatedText);
+                    TextComponent clickableText = new TextComponent(textComponents);
+                    
+                    if (url.startsWith("http")) {
+                        clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+                    } else {
+                        clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, url));
+                    }
+                    
+                    component.addExtra(clickableText);
                 }
-                
-                component.addExtra(clickableText);
                 
                 if (!after.isEmpty()) {
-                    component.addExtra(new TextComponent(ChatColor.translateAlternateColorCodes('&', after)));
+                    String translatedAfter = HexUtils.translateAlternateColorCodes(after);
+                    if (translatedAfter != null) {
+                        net.md_5.bungee.api.chat.BaseComponent[] afterComponents = TextComponent.fromLegacyText(translatedAfter);
+                        component.addExtra(new TextComponent(afterComponents));
+                    }
                 }
                 
                 return component;
             }
         }
         
-        return new TextComponent(ChatColor.translateAlternateColorCodes('&', message));
+        String translatedMessage = HexUtils.translateAlternateColorCodes(message);
+        if (translatedMessage != null) {
+            net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(translatedMessage);
+            return new TextComponent(components);
+        } else {
+            net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(message);
+            return new TextComponent(components);
+        }
     }
 
     public boolean isEnabled() {

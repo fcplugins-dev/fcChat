@@ -45,8 +45,19 @@ public class ChatTabCompleter implements TabCompleter {
                 Map<String, fc.plugins.fcchat.channel.Channel> channels = plugin.getChatManager().getChannelManager().getAllChannels();
                 for (Map.Entry<String, fc.plugins.fcchat.channel.Channel> entry : channels.entrySet()) {
                     fc.plugins.fcchat.channel.Channel channel = entry.getValue();
-                    if (channel.isEnabled() && sender.hasPermission(channel.getPermission())) {
-                        completions.add(entry.getKey());
+                    if (channel.isEnabled()) {
+                        if (channel.isClanChannel()) {
+                            if (sender instanceof org.bukkit.entity.Player) {
+                                org.bukkit.entity.Player player = (org.bukkit.entity.Player) sender;
+                                if (plugin.getChatManager().getChannelManager().hasChannelPermission(player, entry.getKey())) {
+                                    completions.add(entry.getKey());
+                                }
+                            }
+                        } else {
+                            if (sender.hasPermission(channel.getPermission())) {
+                                completions.add(entry.getKey());
+                            }
+                        }
                     }
                 }
             }

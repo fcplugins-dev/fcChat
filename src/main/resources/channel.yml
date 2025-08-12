@@ -1,6 +1,12 @@
 channels:
   admin:
-    name: "Admin"
+    name: "Админ"
     format: "&cⒶ &f{player} &f%suffix%: &7{message}"
     permission: "fcchat.channel.admin"
+    enabled: true
+  clan:
+    name: "Клан"
+    format: "&6Ⓒ &f{player} &f%suffix%: &7{message}"
+    placeholder: "%clan_name%"
+    placeholder_no_clan: "&7Нету"
     enabled: true

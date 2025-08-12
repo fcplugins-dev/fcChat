@@ -5,6 +5,8 @@ import fc.plugins.fcchat.channel.ChannelManager;
 import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.data.PlayerTimeManager;
 import fc.plugins.fcchat.function.Copy;
+import fc.plugins.fcchat.holograms.HologramsManager;
+import fc.plugins.fcchat.holograms.HologramsManager;
 import fc.plugins.fcchat.sync.MessageSynchronizer;
 import fc.plugins.fcchat.function.Spy;
 import fc.plugins.fcchat.integration.LuckPermsIntegration;
@@ -37,13 +39,15 @@ public class ChatManager implements Listener {
     private final LinkBlocker linkBlocker;
     private final AntiSpam antiSpam;
     private final PlayerInfoManager playerInfoManager;
+    private final HologramsManager hologramsManager;
 
-    public ChatManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer) {
+    public ChatManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer, HologramsManager hologramsManager) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.playerTimeManager = playerTimeManager;
         this.messageSynchronizer = messageSynchronizer;
-        this.channelManager = new ChannelManager(plugin, configManager, playerTimeManager, messageSynchronizer);
+        this.hologramsManager = hologramsManager;
+        this.channelManager = new ChannelManager(plugin, configManager, playerTimeManager, messageSynchronizer, hologramsManager);
         this.copyFunction = new Copy(configManager);
         this.spyFunction = new Spy(configManager);
         this.filter = new Filter(configManager);
@@ -67,7 +71,7 @@ public class ChatManager implements Listener {
 
         if (linkBlocker.isBlocked(message) && !hasBypass) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', linkBlocker.getBlockedMessage()));
+            player.sendMessage(HexUtils.translateAlternateColorCodes(linkBlocker.getBlockedMessage()));
             return;
         }
 
@@ -113,16 +117,16 @@ public class ChatManager implements Listener {
             if (chatMessage.startsWith(" ")) {
                 handleLocalChat(player, chatMessage.substring(1));
                 String formattedConsoleMessage = formatMessage(configManager.getLocalChatFormat(), player, chatMessage.substring(1), true);
-                plugin.getLogger().info(ChatColor.translateAlternateColorCodes('&', formattedConsoleMessage));
+                plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
             } else {
                 handleGlobalChat(player, chatMessage);
                 String formattedConsoleMessage = formatMessage(configManager.getGlobalChatFormat(), player, chatMessage, true);
-                plugin.getLogger().info(ChatColor.translateAlternateColorCodes('&', formattedConsoleMessage));
+                plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
             }
         } else {
             handleLocalChat(player, message);
             String formattedConsoleMessage = formatMessage(configManager.getLocalChatFormat(), player, message, true);
-            plugin.getLogger().info(ChatColor.translateAlternateColorCodes('&', formattedConsoleMessage));
+            plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
         }
     }
 
@@ -134,6 +138,9 @@ public class ChatManager implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         playerTimeManager.onPlayerQuit(event.getPlayer());
+        if (hologramsManager != null) {
+            hologramsManager.onPlayerQuit(event.getPlayer());
+        }
     }
 
     public void reloadModeration() {
@@ -179,6 +186,12 @@ public class ChatManager implements Listener {
         if (configManager.isSpyEnabled()) {
             spyFunction.sendSpyMessage(sender, filteredMessage, formattedMessage);
         }
+        
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (hologramsManager != null) {
+                hologramsManager.createHologram(sender, filteredMessage);
+            }
+        });
     }
 
     private void handleGlobalChat(Player sender, String message) {
@@ -201,6 +214,12 @@ public class ChatManager implements Listener {
         if (discord.isEnabled()) {
             discord.sendMessage(sender, filteredMessage);
         }
+        
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (hologramsManager != null) {
+                hologramsManager.createHologram(sender, filteredMessage);
+            }
+        });
     }
 
     private boolean shouldHideMessage(Player sender, Player receiver) {
@@ -212,7 +231,7 @@ public class ChatManager implements Listener {
         String finalFormattedMessage = formattedMessage;
         
         boolean hasHiddenText = filteredMessage.contains("||") && sender.hasPermission(configManager.getHiddenTextPermission());
-        boolean wasFiltered = filter.wasMessageFiltered(originalMessage, filteredMessage);
+        boolean wasFiltered = !originalMessage.equals(filteredMessage);
         boolean canReadBlocked = receiver.hasPermission("fcchat.read");
         boolean canSeePlayerInfo = receiver.hasPermission(configManager.getPlayerInfoPermission()) && configManager.isPlayerInfoEnabled();
         
@@ -228,9 +247,13 @@ public class ChatManager implements Listener {
             String prefix = finalFormattedMessage.substring(0, finalFormattedMessage.lastIndexOf(processedMessage));
             String suffix = finalFormattedMessage.substring(finalFormattedMessage.lastIndexOf(processedMessage) + processedMessage.length());
             
-            TextComponent prefixComponent = new TextComponent(prefix);
-            TextComponent messageComponent = new TextComponent(processedMessage);
-            TextComponent suffixComponent = new TextComponent(suffix);
+            net.md_5.bungee.api.chat.BaseComponent[] prefixComponents = TextComponent.fromLegacyText(prefix);
+            net.md_5.bungee.api.chat.BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] suffixComponents = TextComponent.fromLegacyText(suffix);
+            
+            TextComponent prefixComponent = new TextComponent(prefixComponents);
+            TextComponent messageComponent = new TextComponent(messageComponents);
+            TextComponent suffixComponent = new TextComponent(suffixComponents);
             
             net.md_5.bungee.api.chat.HoverEvent filterHover = new net.md_5.bungee.api.chat.HoverEvent(
                 net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
@@ -259,7 +282,8 @@ public class ChatManager implements Listener {
             if (hasHiddenText) {
                 component = MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, configManager);
             } else {
-                component = new TextComponent(formattedMessage);
+                net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
+                component = new TextComponent(components);
             }
         }
         
@@ -271,14 +295,18 @@ public class ChatManager implements Listener {
         String playerName = sender.getName();
         
         if (!formattedMessage.contains(playerName)) {
-            return new TextComponent(formattedMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
+            return new TextComponent(components);
         }
         
         String beforePlayer = formattedMessage.substring(0, formattedMessage.indexOf(playerName));
         String afterPlayer = formattedMessage.substring(formattedMessage.indexOf(playerName) + playerName.length());
         
-        TextComponent beforeComponent = new TextComponent(beforePlayer);
-        TextComponent playerComponent = new TextComponent(playerName);
+        net.md_5.bungee.api.chat.BaseComponent[] beforeComponents = TextComponent.fromLegacyText(beforePlayer);
+        net.md_5.bungee.api.chat.BaseComponent[] playerComponents = TextComponent.fromLegacyText(playerName);
+        
+        TextComponent beforeComponent = new TextComponent(beforeComponents);
+        TextComponent playerComponent = new TextComponent(playerComponents);
         
         String playerInfoText = createPlayerInfoText(sender);
         if (playerInfoText != null && !playerInfoText.isEmpty()) {
@@ -303,9 +331,13 @@ public class ChatManager implements Listener {
             String beforeMessage = afterPlayer.substring(0, afterPlayer.indexOf(processedMessage));
             String afterMessage = afterPlayer.substring(afterPlayer.indexOf(processedMessage) + processedMessage.length());
             
-            TextComponent beforeMsgComponent = new TextComponent(beforeMessage);
-            TextComponent messageComponent = new TextComponent(processedMessage);
-            TextComponent afterMsgComponent = new TextComponent(afterMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] beforeMsgComponents = TextComponent.fromLegacyText(beforeMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] afterMsgComponents = TextComponent.fromLegacyText(afterMessage);
+            
+            TextComponent beforeMsgComponent = new TextComponent(beforeMsgComponents);
+            TextComponent messageComponent = new TextComponent(messageComponents);
+            TextComponent afterMsgComponent = new TextComponent(afterMsgComponents);
             
             net.md_5.bungee.api.chat.HoverEvent filterHover = new net.md_5.bungee.api.chat.HoverEvent(
                 net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
@@ -325,7 +357,8 @@ public class ChatManager implements Listener {
             beforeComponent.addExtra(afterMsgComponent);
             return beforeComponent;
         } else {
-            TextComponent afterComponent = new TextComponent(afterPlayer);
+            net.md_5.bungee.api.chat.BaseComponent[] afterComponents = TextComponent.fromLegacyText(afterPlayer);
+            TextComponent afterComponent = new TextComponent(afterComponents);
             
             if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
                 afterComponent = copyFunction.addClickEvent(afterComponent, filteredMessage);
@@ -393,15 +426,19 @@ public class ChatManager implements Listener {
 
         LuckPermsIntegration luckPerms = configManager.getLuckPermsIntegration();
         if (luckPerms.isEnabled()) {
-            String prefix = HexUtils.translateAlternateColorCodes(luckPerms.getPrefix(player, ""));
-            String suffix = HexUtils.translateAlternateColorCodes(luckPerms.getSuffix(player, ""));
+            String prefix = luckPerms.getPrefix(player, "");
+            String suffix = luckPerms.getSuffix(player, "");
             formattedMessage = formattedMessage
                     .replace("%prefix%", prefix)
-                    .replace("%suffix%", suffix);
+                    .replace("%suffix%", suffix)
+                    .replace("%luckperms_prefix%", prefix)
+                    .replace("%luckperms_suffix%", suffix);
         } else {
             formattedMessage = formattedMessage
                     .replace("%prefix%", "")
-                    .replace("%suffix%", "");
+                    .replace("%suffix%", "")
+                    .replace("%luckperms_prefix%", "")
+                    .replace("%luckperms_suffix%", "");
         }
 
         PlaceholderAPIIntegration placeholderAPI = configManager.getPlaceholderAPI();
@@ -414,13 +451,13 @@ public class ChatManager implements Listener {
 
     private String processMessageColors(String message, Player player) {
         if (!configManager.isColorChatEnabled()) {
-            return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', message));
+            return ChatColor.stripColor(HexUtils.translateAlternateColorCodes(message));
         }
 
         if (!player.hasPermission(configManager.getColorChatPermission())) {
-            return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', message));
+            return ChatColor.stripColor(HexUtils.translateAlternateColorCodes(message));
         }
 
-        return ChatColor.translateAlternateColorCodes('&', message);
+        return HexUtils.translateAlternateColorCodes(message);
     }
 } 

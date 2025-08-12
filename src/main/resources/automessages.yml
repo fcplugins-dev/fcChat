@@ -6,13 +6,13 @@ messages_1:
   sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
   messages:
     - "&9&n▌&f"
-    - "&9&n▌&f Our plugin is completely &9free."
-    - "&9&n▌&f Link to our studio&9: {https://t.me/fcplugins_minecraft:&9Link}"
+    - "&9&n▌&f Наш плагин полностью &9бесплатный."
+    - "&9&n▌&f Ссылка на нашу студию&9: {https://t.me/fcplugins_minecraft:&9Ссылка}"
     - "&9&n▌&f"
 messages_2:
   sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
   messages:
     - "&9&n▌&f"
-    - "&9&n▌&f The plugin also &9supports,"
-    - "&9&n▌&f Clickable commands&9: {/help:&9Click}"
+    - "&9&n▌&f Плагин также &9поддерживает,"
+    - "&9&n▌&f Кликабельные команды&9: {/help:&9Кликнуть}"
     - "&9&n▌&f"

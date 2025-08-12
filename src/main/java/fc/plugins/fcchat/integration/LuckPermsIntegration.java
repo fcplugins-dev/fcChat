@@ -65,6 +65,4 @@ public class LuckPermsIntegration {
         String suffix = getSuffix(player);
         return suffix != null ? suffix : defaultValue;
     }
-
-
 }

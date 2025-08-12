@@ -5,6 +5,8 @@ import fc.plugins.fcchat.chat.MessageProcessor;
 import fc.plugins.fcchat.config.ConfigManager;
 import fc.plugins.fcchat.data.PlayerTimeManager;
 import fc.plugins.fcchat.function.Copy;
+import fc.plugins.fcchat.holograms.HologramsManager;
+import fc.plugins.fcchat.holograms.HologramsManager;
 import fc.plugins.fcchat.sync.MessageSynchronizer;
 import fc.plugins.fcchat.function.Spy;
 import fc.plugins.fcchat.integration.LuckPermsIntegration;
@@ -38,16 +40,19 @@ public class ChannelManager {
     private final Filter filter;
     private final LinkBlocker linkBlocker;
     private final AntiSpam antiSpam;
+    @SuppressWarnings("unused")
+    private final HologramsManager hologramsManager;
     private final Map<String, Channel> channels;
     private final Map<UUID, String> playerChannels;
     private File channelFile;
     private FileConfiguration channelConfig;
 
-    public ChannelManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer) {
+    public ChannelManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer, HologramsManager hologramsManager) {
         this.plugin = plugin;
         this.configManager = configManager;
         this.playerTimeManager = playerTimeManager;
         this.messageSynchronizer = messageSynchronizer;
+        this.hologramsManager = hologramsManager;
         this.copyFunction = new Copy(configManager);
         this.spyFunction = new Spy(configManager);
         this.filter = new Filter(configManager);
@@ -117,7 +122,43 @@ public class ChannelManager {
         if (channel == null || !channel.isEnabled()) {
             return false;
         }
+        
+        if (channel.isClanChannel()) {
+            return hasClanAccess(player, channel);
+        }
+        
         return player.hasPermission(channel.getPermission());
+    }
+    
+    private boolean hasClanAccess(Player player, Channel channel) {
+        PlaceholderAPIIntegration placeholderAPI = configManager.getPlaceholderAPI();
+        if (placeholderAPI == null || !placeholderAPI.isEnabled()) {
+            return false;
+        }
+        
+        try {
+            String clanName = placeholderAPI.setPlaceholders(player, channel.getPlaceholder());
+            return !clanName.equals(channel.getPlaceholderNoClan());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    public String getPlayerClanName(Player player, Channel channel) {
+        if (!channel.isClanChannel()) {
+            return null;
+        }
+        
+        PlaceholderAPIIntegration placeholderAPI = configManager.getPlaceholderAPI();
+        if (placeholderAPI == null || !placeholderAPI.isEnabled()) {
+            return channel.getPlaceholderNoClan();
+        }
+        
+        try {
+            return placeholderAPI.setPlaceholders(player, channel.getPlaceholder());
+        } catch (Exception e) {
+            return channel.getPlaceholderNoClan();
+        }
     }
 
     public void handleChannelChat(Player sender, String message) {
@@ -129,15 +170,23 @@ public class ChannelManager {
             return;
         }
 
-        if (!sender.hasPermission(channel.getPermission())) {
-            sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("channel.no-permission")));
-            return;
+        if (channel.isClanChannel()) {
+            String clanName = getPlayerClanName(sender, channel);
+            if (clanName.equals(channel.getPlaceholderNoClan())) {
+                sender.sendMessage(HexUtils.translateAlternateColorCodes("&cУ вас нет клана для использования этого канала!"));
+                return;
+            }
+        } else {
+            if (!sender.hasPermission(channel.getPermission())) {
+                sender.sendMessage(HexUtils.translateAlternateColorCodes(configManager.getMessage("channel.no-permission")));
+                return;
+            }
         }
 
         boolean hasBypass = sender.hasPermission("fcchat.bypass");
 
         if (linkBlocker.isBlocked(message) && !hasBypass) {
-            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', linkBlocker.getBlockedMessage()));
+            sender.sendMessage(HexUtils.translateAlternateColorCodes(linkBlocker.getBlockedMessage()));
             return;
         }
 
@@ -177,8 +226,30 @@ public class ChannelManager {
     }
 
     private void sendChannelMessage(Player sender, String originalMessage, String filteredMessage, String formattedMessage, Channel channel) {
+        if (channel.isClanChannel()) {
+            sendClanChannelMessage(sender, originalMessage, filteredMessage, formattedMessage, channel);
+        } else {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (hasChannelPermission(player, channel.getId())) {
+                    TextComponent finalComponent = createChannelMessageComponent(formattedMessage, originalMessage, filteredMessage, sender, player);
+                    player.spigot().sendMessage(finalComponent);
+                }
+            }
+        }
+    }
+    
+    private void sendClanChannelMessage(Player sender, String originalMessage, String filteredMessage, String formattedMessage, Channel channel) {
+        String senderClanName = getPlayerClanName(sender, channel);
+        
+        if (senderClanName.equals(channel.getPlaceholderNoClan())) {
+            sender.sendMessage(HexUtils.translateAlternateColorCodes("&cУ вас нет клана для использования этого канала!"));
+            return;
+        }
+        
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (hasChannelPermission(player, channel.getId())) {
+            String playerClanName = getPlayerClanName(player, channel);
+            
+            if (playerClanName.equals(senderClanName) && !playerClanName.equals(channel.getPlaceholderNoClan())) {
                 TextComponent finalComponent = createChannelMessageComponent(formattedMessage, originalMessage, filteredMessage, sender, player);
                 player.spigot().sendMessage(finalComponent);
             }
@@ -206,9 +277,13 @@ public class ChannelManager {
             String prefix = finalFormattedMessage.substring(0, finalFormattedMessage.lastIndexOf(processedMessage));
             String suffix = finalFormattedMessage.substring(finalFormattedMessage.lastIndexOf(processedMessage) + processedMessage.length());
             
-            TextComponent prefixComponent = new TextComponent(prefix);
-            TextComponent messageComponent = new TextComponent(processedMessage);
-            TextComponent suffixComponent = new TextComponent(suffix);
+            net.md_5.bungee.api.chat.BaseComponent[] prefixComponents = TextComponent.fromLegacyText(prefix);
+            net.md_5.bungee.api.chat.BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] suffixComponents = TextComponent.fromLegacyText(suffix);
+            
+            TextComponent prefixComponent = new TextComponent(prefixComponents);
+            TextComponent messageComponent = new TextComponent(messageComponents);
+            TextComponent suffixComponent = new TextComponent(suffixComponents);
             
             net.md_5.bungee.api.chat.HoverEvent filterHover = new net.md_5.bungee.api.chat.HoverEvent(
                 net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
@@ -237,7 +312,8 @@ public class ChannelManager {
             if (hasHiddenText) {
                 component = MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, configManager);
             } else {
-                component = new TextComponent(formattedMessage);
+                net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
+                component = new TextComponent(components);
             }
         }
         
@@ -248,14 +324,18 @@ public class ChannelManager {
         String playerName = sender.getName();
         
         if (!formattedMessage.contains(playerName)) {
-            return new TextComponent(formattedMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
+            return new TextComponent(components);
         }
         
         String beforePlayer = formattedMessage.substring(0, formattedMessage.indexOf(playerName));
         String afterPlayer = formattedMessage.substring(formattedMessage.indexOf(playerName) + playerName.length());
         
-        TextComponent beforeComponent = new TextComponent(beforePlayer);
-        TextComponent playerComponent = new TextComponent(playerName);
+        net.md_5.bungee.api.chat.BaseComponent[] beforeComponents = TextComponent.fromLegacyText(beforePlayer);
+        net.md_5.bungee.api.chat.BaseComponent[] playerComponents = TextComponent.fromLegacyText(playerName);
+        
+        TextComponent beforeComponent = new TextComponent(beforeComponents);
+        TextComponent playerComponent = new TextComponent(playerComponents);
         
         String playerInfoText = createPlayerInfoText(sender);
         if (playerInfoText != null && !playerInfoText.isEmpty()) {
@@ -280,9 +360,13 @@ public class ChannelManager {
             String beforeMessage = afterPlayer.substring(0, afterPlayer.indexOf(processedMessage));
             String afterMessage = afterPlayer.substring(afterPlayer.indexOf(processedMessage) + processedMessage.length());
             
-            TextComponent beforeMsgComponent = new TextComponent(beforeMessage);
-            TextComponent messageComponent = new TextComponent(processedMessage);
-            TextComponent afterMsgComponent = new TextComponent(afterMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] beforeMsgComponents = TextComponent.fromLegacyText(beforeMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
+            net.md_5.bungee.api.chat.BaseComponent[] afterMsgComponents = TextComponent.fromLegacyText(afterMessage);
+            
+            TextComponent beforeMsgComponent = new TextComponent(beforeMsgComponents);
+            TextComponent messageComponent = new TextComponent(messageComponents);
+            TextComponent afterMsgComponent = new TextComponent(afterMsgComponents);
             
             net.md_5.bungee.api.chat.HoverEvent filterHover = new net.md_5.bungee.api.chat.HoverEvent(
                 net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
@@ -302,7 +386,8 @@ public class ChannelManager {
             beforeComponent.addExtra(afterMsgComponent);
             return beforeComponent;
         } else {
-            TextComponent afterComponent = new TextComponent(afterPlayer);
+            net.md_5.bungee.api.chat.BaseComponent[] afterComponents = TextComponent.fromLegacyText(afterPlayer);
+            TextComponent afterComponent = new TextComponent(afterComponents);
             
             if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
                 afterComponent = copyFunction.addClickEvent(afterComponent, originalMessage);
@@ -351,15 +436,19 @@ public class ChannelManager {
 
         LuckPermsIntegration luckPerms = configManager.getLuckPermsIntegration();
         if (luckPerms.isEnabled()) {
-            String prefix = HexUtils.translateAlternateColorCodes(luckPerms.getPrefix(player, ""));
-            String suffix = HexUtils.translateAlternateColorCodes(luckPerms.getSuffix(player, ""));
+            String prefix = luckPerms.getPrefix(player, "");
+            String suffix = luckPerms.getSuffix(player, "");
             formattedMessage = formattedMessage
                     .replace("%prefix%", prefix)
-                    .replace("%suffix%", suffix);
+                    .replace("%suffix%", suffix)
+                    .replace("%luckperms_prefix%", prefix)
+                    .replace("%luckperms_suffix%", suffix);
         } else {
             formattedMessage = formattedMessage
                     .replace("%prefix%", "")
-                    .replace("%suffix%", "");
+                    .replace("%suffix%", "")
+                    .replace("%luckperms_prefix%", "")
+                    .replace("%luckperms_suffix%", "");
         }
 
         PlaceholderAPIIntegration placeholderAPI = configManager.getPlaceholderAPI();
@@ -372,13 +461,13 @@ public class ChannelManager {
 
     private String processMessageColors(String message, Player player) {
         if (!configManager.isColorChatEnabled()) {
-            return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', message));
+            return ChatColor.stripColor(HexUtils.translateAlternateColorCodes(message));
         }
 
         if (!player.hasPermission(configManager.getColorChatPermission())) {
-            return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', message));
+            return ChatColor.stripColor(HexUtils.translateAlternateColorCodes(message));
         }
 
-        return ChatColor.translateAlternateColorCodes('&', message);
+        return HexUtils.translateAlternateColorCodes(message);
     }
 } 

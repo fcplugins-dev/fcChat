@@ -1,5 +1,5 @@
 name: fcChat
-version: 'v1.6'
+version: 'v1.8'
 main: fc.plugins.fcchat.FcChat
 api-version: '1.16'
 prefix: fcChat
