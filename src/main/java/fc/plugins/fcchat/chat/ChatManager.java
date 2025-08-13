@@ -26,6 +26,8 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.ChatColor;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ChatManager implements Listener {
     private final FcChat plugin;
@@ -40,6 +42,8 @@ public class ChatManager implements Listener {
     private final AntiSpam antiSpam;
     private final PlayerInfoManager playerInfoManager;
     private final HologramsManager hologramsManager;
+    private final SoundManager soundManager;
+    private final PingManager pingManager;
 
     public ChatManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer, HologramsManager hologramsManager) {
         this.plugin = plugin;
@@ -54,6 +58,8 @@ public class ChatManager implements Listener {
         this.linkBlocker = new LinkBlocker(configManager);
         this.antiSpam = new AntiSpam(configManager, playerTimeManager);
         this.playerInfoManager = new PlayerInfoManager(configManager, playerTimeManager);
+        this.soundManager = new SoundManager(configManager);
+        this.pingManager = new PingManager(configManager, soundManager);
     }
 
     @EventHandler
@@ -162,11 +168,13 @@ public class ChatManager implements Listener {
 
         private void handleLocalChat(Player sender, String message) {
         String filteredMessage = filter.filterMessage(message, sender);
-        String processedMessage = MessageProcessor.processHiddenText(filteredMessage, configManager);
+        PingManager.PingResult pingResult = pingManager.processPings(filteredMessage, sender);
+        String processedMessage = MessageProcessor.processHiddenText(pingResult.getProcessedMessage(), configManager);
         String formattedMessage = formatMessage(configManager.getLocalChatFormat(), sender, processedMessage, false);
         int radius = configManager.getLocalChatRadius();
         Location senderLocation = sender.getLocation();
 
+        List<Player> nearbyPlayers = new ArrayList<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getWorld().equals(sender.getWorld()) &&
                 player.getLocation().distance(senderLocation) <= radius) {
@@ -174,29 +182,35 @@ public class ChatManager implements Listener {
                 if (shouldHideMessage(sender, player)) {
                     continue;
                 }
-                TextComponent finalComponent = createFinalMessageComponent(formattedMessage, filteredMessage, message, sender, player);
+                nearbyPlayers.add(player);
+                TextComponent finalComponent = createFinalMessageComponent(formattedMessage, pingResult.getProcessedMessage(), message, sender, player);
                 player.spigot().sendMessage(finalComponent);
             }
         }
+
+        soundManager.playMessageSound(sender);
+        pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
+
         DiscordIntegration discord = configManager.getDiscordIntegration();
         if (discord.isEnabled()) {
-            discord.sendMessage(sender, filteredMessage);
+            discord.sendMessage(sender, pingResult.getProcessedMessage());
         }
 
         if (configManager.isSpyEnabled()) {
-            spyFunction.sendSpyMessage(sender, filteredMessage, formattedMessage);
+            spyFunction.sendSpyMessage(sender, pingResult.getProcessedMessage(), formattedMessage);
         }
         
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (hologramsManager != null) {
-                hologramsManager.createHologram(sender, filteredMessage);
+                hologramsManager.createHologram(sender, pingResult.getProcessedMessage());
             }
         });
     }
 
     private void handleGlobalChat(Player sender, String message) {
         String filteredMessage = filter.filterMessage(message, sender);
-        String processedMessage = MessageProcessor.processHiddenText(filteredMessage, configManager);
+        PingManager.PingResult pingResult = pingManager.processPings(filteredMessage, sender);
+        String processedMessage = MessageProcessor.processHiddenText(pingResult.getProcessedMessage(), configManager);
         String formattedMessage = formatMessage(configManager.getGlobalChatFormat(), sender, processedMessage, false);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -204,20 +218,23 @@ public class ChatManager implements Listener {
                 continue;
             }
 
-            TextComponent finalComponent = createFinalMessageComponent(formattedMessage, filteredMessage, message, sender, player);
+            TextComponent finalComponent = createFinalMessageComponent(formattedMessage, pingResult.getProcessedMessage(), message, sender, player);
             player.spigot().sendMessage(finalComponent);
         }
 
-        messageSynchronizer.syncGlobalMessage(sender, filteredMessage);
+        soundManager.playMessageSound(sender);
+        pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
+
+        messageSynchronizer.syncGlobalMessage(sender, pingResult.getProcessedMessage());
 
         DiscordIntegration discord = configManager.getDiscordIntegration();
         if (discord.isEnabled()) {
-            discord.sendMessage(sender, filteredMessage);
+            discord.sendMessage(sender, pingResult.getProcessedMessage());
         }
         
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (hologramsManager != null) {
-                hologramsManager.createHologram(sender, filteredMessage);
+                hologramsManager.createHologram(sender, pingResult.getProcessedMessage());
             }
         });
     }

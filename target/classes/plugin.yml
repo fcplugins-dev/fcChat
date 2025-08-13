@@ -1,5 +1,5 @@
 name: fcChat
-version: 'v1.8'
+version: 'v1.9'
 main: fc.plugins.fcchat.FcChat
 api-version: '1.16'
 prefix: fcChat
@@ -42,6 +42,12 @@ permissions:
   fcchat.clear:
     description: Allows clearing chat
     default: op
+  fcchat.ping:
+    description: Allows using ping system (@player)
+    default: true
+  fcchat.ping.everyone:
+    description: Allows using @everyone ping
+    default: op
   fcchat.admin:
     description: Full plugin administrator rights
     default: op
@@ -56,3 +62,5 @@ permissions:
       fcchat.info: true
       fcchat.bypass: true
       fcchat.clear: true
+      fcchat.ping: true
+      fcchat.ping.everyone: true

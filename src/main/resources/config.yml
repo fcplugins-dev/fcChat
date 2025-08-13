@@ -1,6 +1,6 @@
 # # # # # # # # # # # # # # # # # # # # # # #
 #                                           #
-#           Плагин сощдан студией           #
+#           Plugin developed by             #
 #                fcPlugins                  #
 #     https://t.me/fcplugins_minecraft      #
 #                                           #
@@ -20,7 +20,7 @@ global-chat:
 copy:
   enabled: true
   permission: "fcchat.copy"
-  hover-text: "&7[&fСкопировать сообщение&7]"
+  hover-text: "&7[&fCopy message&7]"
 
 color-chat:
   enabled: true
@@ -36,12 +36,12 @@ player-info:
   enabled: true
   permission: "fcchat.info"
   lines:
-    - "&7[⚠] &fИнформация игрока&7: %player_name%"
+    - "&7[⚠] &fPlayer Information&7: %player_name%"
     - "&f"
-    - "&7» &fЗашёл&7: %player_last_played_formatted%"
-    - "&7» &fСтрана&7: %player_locale_country%"
-    - "&7» &fАйпи&7: %player_ip%"
-    - "&7» &fПинг&7: %player_ping%"
+    - "&7» &fLast joined&7: %player_last_played_formatted%"
+    - "&7» &fCountry&7: %player_locale_country%"
+    - "&7» &fIP Address&7: %player_ip%"
+    - "&7» &fPing&7: %player_ping%"
 
 discord:
   enabled: false
@@ -72,5 +72,29 @@ hologram-messages:
   max-words-per-line: 6
   height: 2.5
   format: "&f{message}"
+
+sounds:
+  message:
+    enabled: true
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    volume: 0.5
+    pitch: 1.0
+  ping:
+    enabled: true
+    sound: "ENTITY_PLAYER_LEVELUP"
+    volume: 0.8
+    pitch: 1.2
+  everyone-ping:
+    enabled: true
+    sound: "ENTITY_ENDER_DRAGON_GROWL"
+    volume: 1.0
+    pitch: 0.8
+
+ping-system:
+  enabled: true
+  permission: "fcchat.ping"
+  everyone-permission: "fcchat.ping.everyone"
+  ping-color: "&e"
+  everyone-ping-color: "&c"
 
 update-check: true

@@ -6,12 +6,12 @@
 
   <groupId>fc.plugins</groupId>
   <artifactId>fcChat</artifactId>
-  <version>v1.8</version>
+  <version>v1.9</version>
   <packaging>jar</packaging>
 
   <name>fcChat</name>
 
-    <description>Многофункциональный плагин на чат</description>
+    <description>Multifunctional chat plugin</description>
     <properties>
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

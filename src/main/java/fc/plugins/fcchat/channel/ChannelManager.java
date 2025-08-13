@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ChannelManager {
     private final FcChat plugin;
@@ -46,6 +48,8 @@ public class ChannelManager {
     private final Map<UUID, String> playerChannels;
     private File channelFile;
     private FileConfiguration channelConfig;
+    private final fc.plugins.fcchat.chat.SoundManager soundManager;
+    private final fc.plugins.fcchat.chat.PingManager pingManager;
 
     public ChannelManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager, MessageSynchronizer messageSynchronizer, HologramsManager hologramsManager) {
         this.plugin = plugin;
@@ -60,6 +64,8 @@ public class ChannelManager {
         this.antiSpam = new AntiSpam(configManager, playerTimeManager);
         this.channels = new HashMap<>();
         this.playerChannels = new HashMap<>();
+        this.soundManager = new fc.plugins.fcchat.chat.SoundManager(configManager);
+        this.pingManager = new fc.plugins.fcchat.chat.PingManager(configManager, soundManager);
         loadChannels();
     }
 
@@ -173,7 +179,7 @@ public class ChannelManager {
         if (channel.isClanChannel()) {
             String clanName = getPlayerClanName(sender, channel);
             if (clanName.equals(channel.getPlaceholderNoClan())) {
-                sender.sendMessage(HexUtils.translateAlternateColorCodes("&cУ вас нет клана для использования этого канала!"));
+                sender.sendMessage(HexUtils.translateAlternateColorCodes("&cYou don't have a clan to use this channel!"));
                 return;
             }
         } else {
@@ -211,17 +217,21 @@ public class ChannelManager {
         }
 
         String filteredMessage = filter.filterMessage(message, sender);
-        String formattedMessage = formatChannelMessage(channel, sender, filteredMessage);
+        fc.plugins.fcchat.chat.PingManager.PingResult pingResult = pingManager.processPings(filteredMessage, sender);
+        String formattedMessage = formatChannelMessage(channel, sender, pingResult.getProcessedMessage());
 
-        sendChannelMessage(sender, message, filteredMessage, formattedMessage, channel);
+        sendChannelMessage(sender, message, pingResult.getProcessedMessage(), formattedMessage, channel);
+
+        soundManager.playMessageSound(sender);
+        pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
 
         DiscordIntegration discord = configManager.getDiscordIntegration();
         if (discord.isEnabled()) {
-            discord.sendMessage(sender, filteredMessage);
+            discord.sendMessage(sender, pingResult.getProcessedMessage());
         }
 
         if (configManager.isSpyEnabled()) {
-            spyFunction.sendSpyMessage(sender, filteredMessage, formattedMessage);
+            spyFunction.sendSpyMessage(sender, pingResult.getProcessedMessage(), formattedMessage);
         }
     }
 
@@ -242,7 +252,6 @@ public class ChannelManager {
         String senderClanName = getPlayerClanName(sender, channel);
         
         if (senderClanName.equals(channel.getPlaceholderNoClan())) {
-            sender.sendMessage(HexUtils.translateAlternateColorCodes("&cУ вас нет клана для использования этого канала!"));
             return;
         }
         

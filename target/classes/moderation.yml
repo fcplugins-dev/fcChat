@@ -1,11 +1,11 @@
 filter:
   enabled: true
-  mode: "partial"                    # Режимы фильтра:
-                                     # "partial" - частичное скрытие (п****)
-                                     # "full" - полное скрытие (******)
-                                     # "custom" - замена на пользовательское слово
-  symbol: "*"                        # Символ для замены (для режимов partial и full)
-  custom-replacement: "***"          # Пользовательская замена (для режима custom)
+  mode: "partial"                    # Filter modes:
+                                     # "partial" - partial hiding (p****)
+                                     # "full" - full hiding (******)
+                                     # "custom" - replace with custom word
+  symbol: "*"                        # Symbol for replacement (for partial and full modes)
+  custom-replacement: "***"          # Custom replacement (for custom mode)
   bad-words:
     - "badword1"
     - "badword2"
@@ -15,16 +15,16 @@ link-blocking:
   enabled: true
 ip-blocking:
   enabled: true
-blocked-message: "&c[⚠] &fСсылки и IP адреса &cзапрещены!"
+blocked-message: "&c[⚠] &fLinks and IP addresses are &cforbidden!"
 
 anti-spam:
   enabled: true
   cooldown: 3
-  message: "&c[⚠] &fВы сможете написать снова через&c: {time} &fсек&c."
+  message: "&c[⚠] &fYou can write again in&c: {time} &fseconds&c."
   bypass-permission: "fcchat.bypass"
 
 new-player-chat:
   enabled: true
   block-time: 300
-  message: "&c[⚠] &fВы получите доступ к чату через&c: {time} &fсек&c."
+  message: "&c[⚠] &fYou will get access to chat in&c: {time} &fseconds&c."
   bypass-permission: "fcchat.bypass"

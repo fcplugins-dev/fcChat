@@ -1,18 +1,18 @@
-reload-success: "&a[✔] &fКонфигурация перезагружена&a!"
-no-permission: "&c[✘] &fУ вас нет &cправ &fдля выполнения этой команды&c!"
-unknown-command: "&6[⚠] &fНеизвестная команда&6! &fИспользуйте&6: /&ffcchat reload"
+reload-success: "&a[✔] &fConfiguration reloaded&a!"
+no-permission: "&c[✘] &fYou don't have &cpermission &fto execute this command&c!"
+unknown-command: "&6[⚠] &fUnknown command&6! &fUse&6: /&ffcchat reload"
 
 spy:
-  enabled: "&a[✔] &fШпион локального чата &aвключен!"
-  disabled: "&c[✘] &fШпион локального чата &cвыключен!"
-  no-permission: "&c[✘] &fУ вас нет &cправ &fдля использования шпиона&c!"
+  enabled: "&a[✔] &fLocal chat spy &aenabled!"
+  disabled: "&c[✘] &fLocal chat spy &cdisabled!"
+  no-permission: "&c[✘] &fYou don't have &cpermission &fto use spy&c!"
 
 channel:
-  switched: "&a[✔] &fВы переключились на канал&a: {channel}"
-  switched-default: "&a[✔] &fВы переключились на обычный чат&a!"
-  no-permission: "&c[✘] &fУ вас нет &cправ &fдля использования этого канала&c!"
-  not-found: "&6[⚠] &fКанал не найден&6!"
-  usage: "&6[⚠] &fИспользование&6: /&ffcchat channel &6<&fid&6>"
-  players-only: "&6[⚠] &fЭта команда &6только &fдля игроков&6!"
+  switched: "&a[✔] &fYou switched to channel&a: {channel}"
+  switched-default: "&a[✔] &fYou switched to default chat&a!"
+  no-permission: "&c[✘] &fYou don't have &cpermission &fto use this channel&c!"
+  not-found: "&6[⚠] &fChannel not found&6!"
+  usage: "&6[⚠] &fUsage&6: /&ffcchat channel &6<&fid&6>"
+  players-only: "&6[⚠] &fThis command is &6only &ffor players&6!"
 
-clear-chat: "&a[✔] &fЧат очищен администратором &a{player}"
+clear-chat: "&a[✔] &fChat cleared by administrator &a{player}"

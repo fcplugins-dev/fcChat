@@ -4,8 +4,8 @@
   <groupId>fc.plugins</groupId>
   <artifactId>fcChat</artifactId>
   <name>fcChat</name>
-  <version>v1.8</version>
-  <description>Многофункциональный плагин на чат</description>
+  <version>v1.9</version>
+  <description>Multifunctional chat plugin</description>
   <url>https://t.me/fcplugins_minecraft</url>
   <build>
     <resources>

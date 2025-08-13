@@ -258,4 +258,72 @@ public class ConfigManager {
     public String getHologramMessageFormat() {
         return config.getString("hologram-messages.format");
     }
+
+    public boolean isMessageSoundEnabled() {
+        return config.getBoolean("sounds.message.enabled");
+    }
+
+    public String getMessageSound() {
+        return config.getString("sounds.message.sound");
+    }
+
+    public float getMessageSoundVolume() {
+        return (float) config.getDouble("sounds.message.volume");
+    }
+
+    public float getMessageSoundPitch() {
+        return (float) config.getDouble("sounds.message.pitch");
+    }
+
+    public boolean isPingSystemEnabled() {
+        return config.getBoolean("ping-system.enabled");
+    }
+
+    public String getPingPermission() {
+        return config.getString("ping-system.permission");
+    }
+
+    public String getPingColor() {
+        return config.getString("ping-system.ping-color");
+    }
+
+    public boolean isPingSoundEnabled() {
+        return config.getBoolean("sounds.ping.enabled");
+    }
+
+    public String getPingSound() {
+        return config.getString("sounds.ping.sound");
+    }
+
+    public float getPingSoundVolume() {
+        return (float) config.getDouble("sounds.ping.volume");
+    }
+
+    public float getPingSoundPitch() {
+        return (float) config.getDouble("sounds.ping.pitch");
+    }
+
+    public String getEveryonePingPermission() {
+        return config.getString("ping-system.everyone-permission");
+    }
+
+    public String getEveryonePingColor() {
+        return config.getString("ping-system.everyone-ping-color");
+    }
+
+    public boolean isEveryonePingSoundEnabled() {
+        return config.getBoolean("sounds.everyone-ping.enabled");
+    }
+
+    public String getEveryonePingSound() {
+        return config.getString("sounds.everyone-ping.sound");
+    }
+
+    public float getEveryonePingSoundVolume() {
+        return (float) config.getDouble("sounds.everyone-ping.volume");
+    }
+
+    public float getEveryonePingSoundPitch() {
+        return (float) config.getDouble("sounds.everyone-ping.pitch");
+    }
 }

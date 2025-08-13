@@ -22,18 +22,18 @@ public class Updater {
         if (plugin.getConfigManager().updateCheck()) {
             this.latestVersion = this.getLatestVersionFromSpigot();
         } else {
-            this.latestVersion = "v1.8";
+            this.latestVersion = "v1.9";
         }
 
         this.currentVersion = plugin.getDescription().getVersion();
 
         if (this.isNewerVersion(this.latestVersion, this.currentVersion)) {
             this.isHasNewerVersion = true;
-            plugin.getLogger().info("§6§l[fcChat] §fДоступна §6новая §fверсия плагина§6: " + this.latestVersion);
+            plugin.getLogger().info("§6§l[fcChat] §fNew §6version §fof plugin available§6: " + this.latestVersion);
             plugin.getLogger().info("§6https://www.spigotmc.org/resources/fcchat-advanced-chat-management-plugin.127544");
         } else {
             this.isHasNewerVersion = false;
-            plugin.getLogger().info("§a[✔] §fВы используете §aпоследнюю §fверсию плагина§a!");
+            plugin.getLogger().info("§a[✔] §fYou are using the §alatest §fversion of the plugin§a!");
         }
 
     }
@@ -92,10 +92,10 @@ public class Updater {
         }
 
         if (this.isHasNewerVersion) {
-            player.sendMessage("§6§l[fcChat] §fДоступна §6новая §fверсия плагина§6: " + this.latestVersion);
+            player.sendMessage("§6§l[fcChat] §fNew §6version §fof plugin available§6: " + this.latestVersion);
             player.sendMessage("§6https://www.spigotmc.org/resources/fcchat-advanced-chat-management-plugin.127544");
         } else {
-            player.sendMessage("§a§l[fcChat] §fВы используете §aпоследнюю §fверсию плагина§a!");
+            player.sendMessage("§a§l[fcChat] §fYou are using the §alatest §fversion of the plugin§a!");
         }
     }
 
