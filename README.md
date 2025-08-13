@@ -1,6 +1,6 @@
 # 💬 fcChat - Революция в мире чата Minecraft
 
-[![Version](https://img.shields.io/badge/version-v1.8-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
+[![Version](https://img.shields.io/badge/version-v1.9-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
 [![Minecraft](https://img.shields.io/badge/minecraft-1.16+-orange.svg?style=for-the-badge)](https://minecraft.net)
 [![Telegram](https://img.shields.io/badge/telegram-join-7289da.svg?style=for-the-badge)](https://t.me/fcplugins_minecraft)
 
@@ -30,6 +30,7 @@
 - **🌐 Синхронизация чата** — синхронизируйте ваш чат между серверами для более интересного общения
 - **⚙️ Чат голограммы** — вывод текста игрока виде голограммы над головой.
 - **👁️ Скрытое наблюдение** — администраторы могут незаметно отслеживать локальные беседы
+- **⏰ Пинг игроков⏰** — вы можете пинговать игрока чтобы он точно увидел ваше сообщение
 
 ### 🔧 **Мощные интеграции**
 > *Ваш сервер, объединённый воедино*
