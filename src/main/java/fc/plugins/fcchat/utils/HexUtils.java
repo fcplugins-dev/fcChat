@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public class HexUtils {
     private static Boolean supported = null;
-    private static final Pattern HEX_PATTERN = Pattern.compile("#([A-Fa-f0-9]{6})");
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
     private static final Pattern GRADIENT_PATTERN = Pattern.compile("<#([A-Fa-f0-9]{6})>([^<]+)</#([A-Fa-f0-9]{6})>");
 
     public static String translateAlternateColorCodes(String message) {
