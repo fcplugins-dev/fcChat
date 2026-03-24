@@ -1,6 +1,6 @@
 # 💬 fcChat - Революция в мире чата Minecraft
 
-[![Version](https://img.shields.io/badge/version-v1.9-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
+[![Version](https://img.shields.io/badge/version-v2.2-brightgreen.svg?style=for-the-badge)](https://github.com/yourusername/fcchat/releases)
 [![Minecraft](https://img.shields.io/badge/minecraft-1.16+-orange.svg?style=for-the-badge)](https://minecraft.net)
 [![Telegram](https://img.shields.io/badge/telegram-join-7289da.svg?style=for-the-badge)](https://t.me/fcplugins_minecraft)
 
@@ -185,6 +185,28 @@ spy:
 - **📧 Email**: support@fcplugins.xyz
 
 ## 🛠️ Исходный код для разработчиков
+
+### 📦 Maven зависимость через GitHub (JitPack)
+
+Если вы хотите подключить `fcChat` как зависимость в свой плагин, используйте JitPack:
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+
+```xml
+<dependency>
+    <groupId>com.github.fcplugins-dev</groupId>
+    <artifactId>fcChat</artifactId>
+    <version>VERSION</version>
+    <scope>provided</scope>
+</dependency>
+```
 
 ### 📝 **Клонирование репозитория:**
 ```
