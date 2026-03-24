@@ -1,0 +1,47 @@
+reload-success: "&a[✔] &fКонфигурация перезагружена&a!"
+no-permission: "&c[✘] &fУ вас нет &cправ &fдля выполнения этой команды&c!"
+unknown-command: "&6[⚠] &fНеизвестная команда&6! &fИспользуйте&6: /&ffcchat reload"
+players-only: "&6[⚠] &fЭта команда доступна &6только &fигрокам&6!"
+
+channel:
+  switched: "&a[✔] &fВы переключились на канал&a: {channel}"
+  switched-default: "&a[✔] &fВы переключились на стандартный чат&a!"
+  switch-cancelled: "&6[⚠] &fПереключение канала было отменено другим плагином&6!"
+  no-permission: "&c[✘] &fУ вас нет &cправ &fиспользовать этот канал&c!"
+  not-found: "&6[⚠] &fКанал не найден&6!"
+  usage: "&6[⚠] &fИспользование&6: /&ffcchat channel &6<&fid&6>"
+  players-only: "&6[⚠] &fЭта команда доступна &6только &fигрокам&6!"
+  no-clan: "&c[✘] &fУ вас нет клана для использования этого канала&c!"
+
+clear-chat: "&a[✔] &fЧат очищен администратором &a{player}"
+
+private-messages:
+  player-not-found: "&c[✘] &fИгрок &c{player} &fне найден&c!"
+  no-permission: "&c[✘] &fУ вас нет &cправ &fна личные сообщения&c!"
+  cannot-message-yourself: "&c[✘] &fВы не можете написать самому себе&c!"
+  no-message: "&6[⚠] &fИспользование&6: /&fmsg &6<&fигрок&6> &6<&fсообщение&6>"
+  no-reply: "&6[⚠] &fИспользование&6: /&fr &6<&fсообщение&6>"
+  no-one-to-reply: "&c[✘] &fНекому отвечать&c!"
+  player-offline: "&c[✘] &fИгрок &c{player} &fне в сети&c!"
+
+broadcast:
+  no-permission: "&c[✘] &fУ вас нет &cправ &fна рассылку&c!"
+  no-message: "&6[⚠] &fИспользование&6: /&fbroadcast &6<&fсообщение&6>"
+  success: "&a[✔] &fОбъявление успешно отправлено&a!"
+  cancelled: "&6[⚠] &fОбъявление было отменено другим плагином&6!"
+
+color:
+  changed: "&a[✔] &fЦвет изменен на {color} &fдля игрока &a{player}"
+  invalid: "&c[✘] &fНеверный цвет&c! &fДоступные цвета&c: {colors}"
+  player-not-found: "&c[✘] &fИгрок &c{player} &fне найден&c!"
+  usage: "&6[⚠] &fИспользование&6: /&ffcchat color &6<&fцвет&6> &6<&fигрок&6>"
+  no-permission: "&c[✘] &fУ вас нет &cправ &fна смену цвета&c!"
+
+ai-moderator:
+  usage: "&6[⚠] &fИспользование&6: /&ffcchat ai &6<&fstats/logger&6>"
+  stats: "&c[fcChat AI] &fЗаблокировано сообщений&c: &c{blocked} &7| &fЛоггер&c: {logger}"
+  logger-enabled: "&a[✔] &fAI логгер включен&a!"
+  logger-disabled: "&6[⚠] &fAI логгер выключен&6!"
+  status:
+    on: "&aВКЛ"
+    off: "&cВЫКЛ"

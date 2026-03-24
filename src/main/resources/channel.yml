@@ -1,0 +1,14 @@
+channels:
+  admin:
+    name: "Админ"
+    format: "&cⒶ {player}&f%suffix%: &7{message}"
+    permission: "fcchat.channel.admin"
+    symbol: "#"
+    enabled: true
+  clan:
+    name: "Клан"
+    format: "&6Ⓒ {player}&f%suffix%: &7{message}"
+    placeholder: "%clan_name%"
+    placeholder_no_clan: "&7Нет"
+    symbol: "$"
+    enabled: true

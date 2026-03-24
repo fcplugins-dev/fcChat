@@ -1,0 +1,91 @@
+filter:
+  enabled: true
+  mode: "partial"
+    # Режимы фильтра:
+    # "partial" - частичное скрытие (b****)
+    # "full" - полное скрытие (******)
+    # "custom" - замена на свое слово
+  symbol: "*"                        # Символ замены (для partial и full)
+  custom-replacement: "***"          # Своя замена (для custom)
+  bad-words:
+    - "badword1"
+    - "badword2"
+    - "badword3"
+
+link-blocking:
+  enabled: true
+ip-blocking:
+  enabled: true
+blocked-message: "&c[⚠] &fСсылки и IP-адреса &cзапрещены!"
+
+anti-spam:
+  enabled: true
+  cooldown: 3
+  message: "&c[⚠] &fВы сможете писать снова через&c: {time} &fсекунд&c."
+  bypass-permission: "fcchat.bypass"
+
+anti-caps:
+  enabled: true
+  percent: 50
+  mode: "lowercase"
+    # Режимы anti-caps:
+    # "lowercase" - преобразовать сообщение в нижний регистр
+    # "block" - полностью блокировать сообщение
+  message: "&c[⚠] &fСлишком много заглавных букв!"
+  bypass-permission: "fcchat.bypass"
+
+new-player-chat:
+  enabled: true
+  block-time: 300
+  message: "&c[⚠] &fДоступ к чату будет через&c: {time} &fсекунд&c."
+  bypass-permission: "fcchat.bypass"
+
+ai-moderator: # Функция экспериментальная, качество зависит от API, модели и промта
+  enabled: true
+  debug: false
+  endpoint: "https://openrouter.ai/api/v1/chat/completions"
+  api-key: ""
+  model: "openai/gpt-4o-mini"
+  blocked-message: "&c[⚠] &fВаше сообщение было скрыто &cAI-модератором&f."
+  logger:
+    enabled: false
+    permission: "fcchat.ai.logger"
+    message: "&c[fcChat AI] &fСообщение игрока &c{player_name} &fбыло скрыто &cAI-модератором&f."
+    hover-message: "&c[⚠] &fПричина&c: &f{reason}"
+  prompt: |
+    Ты — AI-модератор игрового чата Minecraft.
+    Твоя задача — проанализировать ОДНО входящее сообщение и вернуть ТОЛЬКО JSON без дополнительного текста.
+
+    Формат ответа (строго, валидный JSON):
+    {
+      "flagged": false,
+      "reason": "короткая причина",
+      "safe_message": "безопасная версия сообщения"
+    }
+
+    Правила модерации:
+    1) Устанавливай flagged = true, если сообщение содержит:
+       - разжигание ненависти или дискриминацию;
+       - тяжелые оскорбления или агрессивные унижения;
+       - угрозы насилием или призывы причинить вред;
+       - доксинг (публикацию личных/приватных данных);
+       - явный сексуальный контент;
+       - мошенничество, фишинг или вредоносные ссылки;
+       - попытки обхода фильтра мата (подмены символов, маскировка и т.п.);
+       - рекламу подозрительных сайтов/серверов или приглашения на сторонние серверы.
+
+    2) НЕ помечай обычное нейтральное общение, безобидные шутки,
+       легкие эмоции и повседневный чат.
+
+    3) Поле reason:
+       - коротко и понятно (2-6 слов),
+       - без лишних пояснений.
+
+    4) Поле safe_message:
+       - если flagged = false -> верни исходное сообщение без изменений;
+       - если flagged = true -> верни безопасную версию, удалив/заменив токсичные части
+         нейтральным текстом (например: "[удалено модерацией]").
+
+    Важно:
+    - Ответ должен быть только валидным JSON.
+    - Без Markdown, комментариев и любого дополнительного текста.

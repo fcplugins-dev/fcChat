@@ -1,0 +1,21 @@
+automessages: true
+interval: 300
+mode: random
+
+# mode: random - случайный выбор сообщения
+# mode: sequential - последовательный показ сообщений (1, 2, 3... и снова с 1)
+
+messages_1:
+  sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  messages:
+    - "&9&n▌&f"
+    - "&9&n▌&f Наш плагин полностью &9бесплатный."
+    - "&9&n▌&f Ссылка на нашу студию&9: {https://t.me/fcplugins_minecraft:&9Ссылка:Нажмите, чтобы перейти в канал}"
+    - "&9&n▌&f"
+messages_2:
+  sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  messages:
+    - "&9&n▌&f"
+    - "&9&n▌&f Плагин также &9поддерживает"
+    - "&9&n▌&f Кликабельные команды&9: {/help:&9Клик:Нажмите, чтобы открыть помощь}"
+    - "&9&n▌&f"

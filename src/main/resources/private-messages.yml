@@ -1,0 +1,51 @@
+private-messages:
+  enabled: true
+  permission: "fcchat.msg"
+  cooldown: 3
+  cooldown-message: "&c[✘] &fПодождите &c{time} &fсек. перед следующим сообщением&c!"
+  format:
+    sender: "&7[&6Вы &7-> &e{receiver}&7] &f{message}"
+    receiver: "&7[&e{sender} &7-> &6Вы&7] &f{message}"
+  sounds:
+    sender:
+      enabled: true
+      sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 0.3
+      pitch: 1.2
+    receiver:
+      enabled: true
+      sound: "ENTITY_PLAYER_LEVELUP"
+      volume: 0.5
+      pitch: 1.0
+
+reply:
+  enabled: true
+  permission: "fcchat.reply"
+  cooldown: 3
+  cooldown-message: "&c[✘] &fПодождите &c{time} &fсек. перед следующим ответом&c!"
+  format:
+    sender: "&7[&6Вы &7-> &e{receiver}&7] &f{message}"
+    receiver: "&7[&e{sender} &7-> &6Вы&7] &f{message}"
+  sounds:
+    sender:
+      enabled: true
+      sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+      volume: 0.3
+      pitch: 1.2
+    receiver:
+      enabled: true
+      sound: "ENTITY_PLAYER_LEVELUP"
+      volume: 0.5
+      pitch: 1.0
+
+broadcast:
+  enabled: true
+  permission: "fcchat.broadcast"
+  cooldown: 10
+  cooldown-message: "&c[✘] &fПодождите &c{time} &fсек. перед следующим объявлением&c!"
+  format: "&c[&4BROADCAST&c] &7(&f{sender}&7) &f{message}"
+  sounds:
+    enabled: true
+    sound: "ENTITY_ENDER_DRAGON_GROWL"
+    volume: 0.8
+    pitch: 0.8
