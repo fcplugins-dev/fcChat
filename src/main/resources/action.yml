@@ -1,0 +1,31 @@
+enabled: true
+
+actions:
+  player-name:
+    enabled: true
+    permission: "fcchat.action.player"
+    target: "player"
+    click-commands:
+      - '[hover] &eНажмите, чтобы ответить игроку'
+      - '[hover] &7Игрок: &f{player}'
+      - '[sound] UI_BUTTON_CLICK 1.0 1.0'
+      - '[paste] /msg {player} '
+  
+  message:
+    enabled: true
+    permission: "fcchat.action.message"
+    target: "message"
+    click-commands:
+      - '[hover] &eНажмите, чтобы скопировать сообщение'
+      - '[hover] &7Сообщение: &f{message}'
+      - '[sound] ENTITY_EXPERIENCE_ORB_PICKUP'
+      - '[copy] {message}'
+  
+  prefix:
+    enabled: true
+    permission: "fcchat.action.prefix"
+    target: "prefix"
+    click-commands:
+      - '[hover] &eИнформация об игроке'
+      - '[hover] &7Игрок: &f{player}'
+      - '[hover] &7Получатель: &f{receiver}'
