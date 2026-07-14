@@ -1,131 +1,326 @@
+
 package fc.plugins.fcchat;
 
-import fc.plugins.fcchat.automessages.AutoMessages;
+import fc.plugins.fcchat.api.FcChatApi;
+import fc.plugins.fcchat.api.FcChatApiProvider;
+import fc.plugins.fcchat.api.event.FcChatApiReadyEvent;
+import fc.plugins.fcchat.api.internal.FcChatApiImpl;
 import fc.plugins.fcchat.chat.ChatManager;
-import fc.plugins.fcchat.chatgame.ChatGame;
+import fc.plugins.fcchat.chat.automessages.AutoMessages;
+import fc.plugins.fcchat.chat.listeners.JoinLeaveListener;
+import fc.plugins.fcchat.chat.listeners.UpdateListener;
+import fc.plugins.fcchat.commands.BroadcastCommand;
+import fc.plugins.fcchat.commands.ChannelCommand;
 import fc.plugins.fcchat.commands.ChatCommands;
 import fc.plugins.fcchat.commands.ChatTabCompleter;
-import fc.plugins.fcchat.config.ConfigManager;
-import fc.plugins.fcchat.data.PlayerTimeManager;
-import fc.plugins.fcchat.function.Copy;
-import fc.plugins.fcchat.listeners.UpdateListener;
-import fc.plugins.fcchat.listeners.JoinLeaveListener;
-import fc.plugins.fcchat.database.MySQLManager;
-import fc.plugins.fcchat.sync.MessageSynchronizer;
+import fc.plugins.fcchat.commands.ClearCommand;
+import fc.plugins.fcchat.commands.PrivateMessageCommand;
+import fc.plugins.fcchat.commands.PrivateMessageTabCompleter;
+import fc.plugins.fcchat.commands.ReplyCommand;
+import fc.plugins.fcchat.integration.DiscordSrvInboundGate;
+import fc.plugins.fcchat.integration.DiscordSrvIntegration;
+import fc.plugins.fcchat.integration.database.MySQLManager;
+import fc.plugins.fcchat.manager.CooldownManager;
+import fc.plugins.fcchat.manager.PrivateMessageManager;
+import fc.plugins.fcchat.manager.PrivateMessageSoundManager;
+import fc.plugins.fcchat.manager.config.ConfigManager;
+import fc.plugins.fcchat.manager.holograms.HologramsManager;
+import fc.plugins.fcchat.moderation.AiModerator;
 import fc.plugins.fcchat.utils.Metrics;
-import fc.plugins.fcchat.holograms.HologramsManager;
 import fc.plugins.fcchat.utils.Updater;
+import fc.plugins.fcchat.utils.concurrent.CompatScheduler;
+import fc.plugins.fcchat.utils.data.PlayerTimeManager;
+import fc.plugins.fcchat.utils.function.chatgame.ChatGame;
+import fc.plugins.fcchat.utils.sync.MessageSynchronizer;
+import github.scarsz.discordsrv.DiscordSRV;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class FcChat extends JavaPlugin {
-    private static final int BSTATS_PLUGIN_ID = 26800;
-    
+public final class FcChat
+extends JavaPlugin {
     private ConfigManager configManager;
     private PlayerTimeManager playerTimeManager;
     private ChatManager chatManager;
     private ChatCommands chatCommands;
     private ChatTabCompleter chatTabCompleter;
-    private Copy copyFunction;
+    private ClearCommand clearCommand;
+    private ChannelCommand channelCommand;
+    private PrivateMessageCommand privateMessageCommand;
+    private PrivateMessageTabCompleter privateMessageTabCompleter;
+    private ReplyCommand replyCommand;
+    private BroadcastCommand broadcastCommand;
+    private PrivateMessageManager privateMessageManager;
+    private CooldownManager cooldownManager;
+    private PrivateMessageSoundManager privateMessageSoundManager;
     private AutoMessages autoMessages;
     private Updater updater;
     private ChatGame chatGame;
     private MySQLManager mysqlManager;
     private MessageSynchronizer messageSynchronizer;
     private HologramsManager hologramsManager;
+    private DiscordSrvIntegration discordSrvIntegration;
+    private DiscordSrvInboundGate discordSrvInboundGate;
+    private boolean discordSrvSubscribed;
+    private AiModerator aiModerator;
+    private FcChatApi api;
+    private CompatScheduler compatScheduler;
 
-    @Override
     public void onEnable() {
         try {
-            configManager = new ConfigManager(this);
-            getLogger().info("§7# # # # # # # # # # # # # # # # # # # # # # #");
-            getLogger().info("§7#                                           #");
-            getLogger().info("§7#       Plugin developed by                 #");
-            getLogger().info("§7#            fcPlugins                      #");
-            getLogger().info("§7#    https://t.me/fcplugins_minecraft       #");
-            getLogger().info("§7#                                           #");
-            getLogger().info("§7# # # # # # # # # # # # # # # # # # # # # # #");
-            
-            playerTimeManager = new PlayerTimeManager(this);
-            copyFunction = new Copy(configManager);
-            mysqlManager = new MySQLManager(this);
-            messageSynchronizer = new MessageSynchronizer(this, mysqlManager);
-            hologramsManager = new HologramsManager(this);
-            chatManager = new ChatManager(this, configManager, playerTimeManager, messageSynchronizer, hologramsManager);
-            chatCommands = new ChatCommands(this, configManager);
-            chatTabCompleter = new ChatTabCompleter(configManager, this);
-            autoMessages = new AutoMessages(this);
-            updater = new Updater(this);
-            chatGame = new ChatGame(this);
-            new Metrics(this, BSTATS_PLUGIN_ID);
-
-            getServer().getPluginManager().registerEvents(chatManager, this);
-            getServer().getPluginManager().registerEvents(chatGame, this);
-            getServer().getPluginManager().registerEvents(new UpdateListener(this), this);
-            getServer().getPluginManager().registerEvents(new JoinLeaveListener(configManager), this);
-            getCommand("fcchat").setExecutor(chatCommands);
-            getCommand("fcchat").setTabCompleter(chatTabCompleter);
-
-            autoMessages.start();
-        } catch (Exception e) {
+            this.configManager = new ConfigManager(this);
+            this.compatScheduler = new CompatScheduler(this);
+            this.getLogger().info("# # # # # # # # # # # # # # # # # # # # # # #");
+            this.getLogger().info("#                                           #");
+            this.getLogger().info("#        Plugin created by studio           #");
+            this.getLogger().info("#               fcPlugins                   #");
+            this.getLogger().info("#    https://t.me/fcplugins_minecraft       #");
+            this.getLogger().info("#                                           #");
+            this.getLogger().info("# # # # # # # # # # # # # # # # # # # # # # #");
+            this.playerTimeManager = new PlayerTimeManager();
+            this.mysqlManager = new MySQLManager(this);
+            this.messageSynchronizer = new MessageSynchronizer(this, this.mysqlManager);
+            this.hologramsManager = new HologramsManager(this);
+            this.discordSrvIntegration = new DiscordSrvIntegration(this);
+            this.aiModerator = new AiModerator(this.configManager);
+            this.chatManager = new ChatManager(this, this.configManager, this.playerTimeManager, this.messageSynchronizer, this.hologramsManager);
+            this.chatCommands = new ChatCommands(this, this.configManager);
+            this.chatTabCompleter = new ChatTabCompleter(this.configManager, this);
+            this.clearCommand = new ClearCommand(this, this.configManager);
+            this.channelCommand = new ChannelCommand(this, this.configManager);
+            this.privateMessageManager = new PrivateMessageManager();
+            this.cooldownManager = new CooldownManager(this.configManager);
+            this.privateMessageSoundManager = new PrivateMessageSoundManager(this.configManager);
+            this.privateMessageCommand = new PrivateMessageCommand(this, this.configManager);
+            this.privateMessageTabCompleter = new PrivateMessageTabCompleter();
+            this.replyCommand = new ReplyCommand(this, this.configManager);
+            this.broadcastCommand = new BroadcastCommand(this, this.configManager);
+            this.api = new FcChatApiImpl(this, this.configManager);
+            FcChatApiProvider.set(this.api);
+            this.getServer().getServicesManager().register(FcChatApi.class, this.api, this, ServicePriority.Normal);
+            this.autoMessages = new AutoMessages(this);
+            this.updater = new Updater(this);
+            this.chatGame = new ChatGame(this);
+            new Metrics(this, 26800);
+            this.getServer().getPluginManager().callEvent(new FcChatApiReadyEvent(this.api, false));
+            this.registerEventsWithPriority();
+            this.getServer().getPluginManager().registerEvents(new UpdateListener(this), this);
+            this.getServer().getPluginManager().registerEvents(new JoinLeaveListener(this.configManager), this);
+            this.discordSrvInboundGate = new DiscordSrvInboundGate(this);
+            this.registerDiscordSrvLifecycleHooks();
+            this.trySubscribeDiscordSrvInboundGate();
+            this.getCommand("fcchat").setExecutor(this.chatCommands);
+            this.getCommand("fcchat").setTabCompleter(this.chatTabCompleter);
+            if (this.configManager.isCommandEnabled("clear")) {
+                this.getCommand("clear").setExecutor(this.clearCommand);
+            }
+            this.getCommand("channel").setExecutor(this.channelCommand);
+            if (this.configManager.isCommandEnabled("msg")) {
+                this.getCommand("msg").setExecutor(this.privateMessageCommand);
+                this.getCommand("msg").setTabCompleter(this.privateMessageTabCompleter);
+                if (this.configManager.isCommandAliasEnabled("msg", "tell")) {
+                    this.getCommand("tell").setExecutor(this.privateMessageCommand);
+                    this.getCommand("tell").setTabCompleter(this.privateMessageTabCompleter);
+                }
+                if (this.configManager.isCommandAliasEnabled("msg", "whisper")) {
+                    this.getCommand("whisper").setExecutor(this.privateMessageCommand);
+                    this.getCommand("whisper").setTabCompleter(this.privateMessageTabCompleter);
+                }
+                if (this.configManager.isCommandAliasEnabled("msg", "w")) {
+                    this.getCommand("w").setExecutor(this.privateMessageCommand);
+                    this.getCommand("w").setTabCompleter(this.privateMessageTabCompleter);
+                }
+            }
+            if (this.configManager.isCommandEnabled("reply")) {
+                if (this.configManager.isCommandAliasEnabled("reply", "r")) {
+                    this.getCommand("r").setExecutor(this.replyCommand);
+                }
+                this.getCommand("reply").setExecutor(this.replyCommand);
+            }
+            if (this.configManager.isCommandEnabled("broadcast")) {
+                this.getCommand("broadcast").setExecutor(this.broadcastCommand);
+                if (this.configManager.isCommandAliasEnabled("broadcast", "bc")) {
+                    this.getCommand("bc").setExecutor(this.broadcastCommand);
+                }
+                if (this.configManager.isCommandAliasEnabled("broadcast", "announce")) {
+                    this.getCommand("announce").setExecutor(this.broadcastCommand);
+                }
+            }
+            this.autoMessages.start();
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public ChatManager getChatManager() {
-        return chatManager;
+        return this.chatManager;
+    }
+
+    public PlayerTimeManager getPlayerTimeManager() {
+        return this.playerTimeManager;
     }
 
     public AutoMessages getAutoMessages() {
-        return autoMessages;
+        return this.autoMessages;
     }
 
     public Updater getUpdater() {
-        return updater;
+        return this.updater;
     }
 
     public ConfigManager getConfigManager() {
-        return configManager;
+        return this.configManager;
     }
 
     public ChatGame getChatGame() {
-        return chatGame;
+        return this.chatGame;
     }
 
-    @Override
     public void onDisable() {
         try {
-            if (playerTimeManager != null) {
-                playerTimeManager.saveAllData();
+            if (this.autoMessages != null) {
+                this.autoMessages.stop();
             }
-            if (autoMessages != null) {
-                autoMessages.stop();
+            if (this.chatGame != null) {
+                this.chatGame.stop();
             }
-            if (chatGame != null) {
-                chatGame.stop();
+            if (this.messageSynchronizer != null) {
+                this.messageSynchronizer.stop();
             }
-            if (messageSynchronizer != null) {
-                messageSynchronizer.stop();
+            if (this.mysqlManager != null) {
+                this.mysqlManager.disconnect();
             }
-            if (mysqlManager != null) {
-                mysqlManager.disconnect();
+            if (this.hologramsManager != null) {
+                this.hologramsManager.removeAllHolograms();
             }
-            if (hologramsManager != null) {
-                hologramsManager.removeAllHolograms();
+            if (this.api != null) {
+                this.getServer().getServicesManager().unregister(FcChatApi.class, this.api);
+                FcChatApiProvider.set(null);
             }
-        } catch (Exception e) {
+            this.tryUnsubscribeDiscordSrvInboundGate();
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public MessageSynchronizer getMessageSynchronizer() {
-        return messageSynchronizer;
+        return this.messageSynchronizer;
     }
 
     public MySQLManager getMySQLManager() {
-        return mysqlManager;
+        return this.mysqlManager;
     }
-    
+
     public HologramsManager getHologramManager() {
-        return hologramsManager;
+        return this.hologramsManager;
     }
-} 
+
+    public PrivateMessageManager getPrivateMessageManager() {
+        return this.privateMessageManager;
+    }
+
+    public CooldownManager getCooldownManager() {
+        return this.cooldownManager;
+    }
+
+    public PrivateMessageSoundManager getPrivateMessageSoundManager() {
+        return this.privateMessageSoundManager;
+    }
+
+    public DiscordSrvIntegration getDiscordSrvIntegration() {
+        return this.discordSrvIntegration;
+    }
+
+    public FcChatApi getApi() {
+        return this.api;
+    }
+
+    public AiModerator getAiModerator() {
+        return this.aiModerator;
+    }
+
+    public CompatScheduler getCompatScheduler() {
+        return this.compatScheduler;
+    }
+
+    private void registerEventsWithPriority() {
+        EventPriority priority = this.getEventPriorityFromConfig();
+        this.getServer().getPluginManager().registerEvent(AsyncPlayerChatEvent.class, this.chatManager, priority, (listener, event) -> {
+            if (event instanceof AsyncPlayerChatEvent) {
+                this.chatManager.onPlayerChat((AsyncPlayerChatEvent)event);
+            }
+        }, this);
+        this.getServer().getPluginManager().registerEvents(this.chatGame, this);
+    }
+
+    private EventPriority getEventPriorityFromConfig() {
+        String priorityString = this.configManager.getEventPriority().toUpperCase();
+        try {
+            return EventPriority.valueOf(priorityString);
+        }
+        catch (IllegalArgumentException e) {
+            return EventPriority.NORMAL;
+        }
+    }
+
+    public void reloadEventsWithPriority() {
+        HandlerList.unregisterAll(this.chatManager);
+        this.registerEventsWithPriority();
+    }
+
+    private void registerDiscordSrvLifecycleHooks() {
+        this.getServer().getPluginManager().registerEvents(new Listener() {
+            @org.bukkit.event.EventHandler
+            public void onPluginEnable(PluginEnableEvent event) {
+                if ("DiscordSRV".equalsIgnoreCase(event.getPlugin().getName())) {
+                    trySubscribeDiscordSrvInboundGate();
+                }
+            }
+
+            @org.bukkit.event.EventHandler
+            public void onPluginDisable(PluginDisableEvent event) {
+                if ("DiscordSRV".equalsIgnoreCase(event.getPlugin().getName())) {
+                    tryUnsubscribeDiscordSrvInboundGate();
+                }
+            }
+        }, this);
+    }
+
+    private void trySubscribeDiscordSrvInboundGate() {
+        if (this.discordSrvSubscribed) {
+            return;
+        }
+        if (this.discordSrvInboundGate == null) {
+            return;
+        }
+        if (!this.getServer().getPluginManager().isPluginEnabled("DiscordSRV")) {
+            return;
+        }
+        DiscordSRV.api.subscribe(this.discordSrvInboundGate);
+        this.discordSrvSubscribed = true;
+    }
+
+    private void tryUnsubscribeDiscordSrvInboundGate() {
+        if (!this.discordSrvSubscribed) {
+            return;
+        }
+        if (this.discordSrvInboundGate == null) {
+            this.discordSrvSubscribed = false;
+            return;
+        }
+        DiscordSRV.api.unsubscribe(this.discordSrvInboundGate);
+        this.discordSrvSubscribed = false;
+    }
+}

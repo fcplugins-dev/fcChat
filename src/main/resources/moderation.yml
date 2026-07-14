@@ -1,9 +1,10 @@
 filter:
   enabled: true
-  mode: "partial"                    # Filter modes:
-                                     # "partial" - partial hiding (p****)
-                                     # "full" - full hiding (******)
-                                     # "custom" - replace with custom word
+  mode: "partial"
+    # Filter modes:
+    # "partial" - partial hiding (b****)
+    # "full" - full hiding (******)
+    # "custom" - replace with custom word
   symbol: "*"                        # Symbol for replacement (for partial and full modes)
   custom-replacement: "***"          # Custom replacement (for custom mode)
   bad-words:
@@ -15,7 +16,7 @@ link-blocking:
   enabled: true
 ip-blocking:
   enabled: true
-blocked-message: "&c[⚠] &fLinks and IP addresses are &cforbidden!"
+blocked-message: "&c[⚠] &fLinks and IP addresses are &cprohibited!"
 
 anti-spam:
   enabled: true
@@ -23,8 +24,68 @@ anti-spam:
   message: "&c[⚠] &fYou can write again in&c: {time} &fseconds&c."
   bypass-permission: "fcchat.bypass"
 
+anti-caps:
+  enabled: true
+  percent: 50
+  mode: "lowercase"
+    # Anti-caps modes:
+    # "lowercase" - convert message to lowercase
+    # "block" - block message completely
+  message: "&c[⚠] &fToo many capital letters!"
+  bypass-permission: "fcchat.bypass"
+
 new-player-chat:
   enabled: true
   block-time: 300
   message: "&c[⚠] &fYou will get access to chat in&c: {time} &fseconds&c."
   bypass-permission: "fcchat.bypass"
+
+ai-moderator: # This feature is experimental and depends on API, model, and prompt quality
+  enabled: true
+  debug: false
+  endpoint: "https://openrouter.ai/api/v1/chat/completions"
+  api-key: ""
+  model: "openai/gpt-4o-mini"
+  blocked-message: "&c[⚠] &fYour message was hidden by &cAI Moderator&f."
+  logger:
+    enabled: false
+    permission: "fcchat.ai.logger"
+    message: "&c[fcChat AI] &fMessage from player &c{player_name} &fwas hidden by &cAI Moderator&f."
+    hover-message: "&c[⚠] &fReason&c: &f{reason}"
+  prompt: |
+    You are an AI moderator for a Minecraft chat.
+    Your task is to analyze ONE incoming message and return ONLY JSON with no extra text.
+
+    Response format (strict, valid JSON):
+    {
+      "flagged": false,
+      "reason": "short reason",
+      "safe_message": "safe message version"
+    }
+
+    Moderation rules:
+    1) Set flagged = true if the message contains:
+       - hate speech or discrimination;
+       - severe insults or aggressive humiliation;
+       - threats of violence or calls to harm;
+       - doxxing (sharing personal/private data);
+       - explicit sexual content;
+       - scams, phishing, or malicious links;
+       - profanity filter bypass attempts (character substitutions, obfuscation, etc.);
+       - advertising suspicious websites/servers or invitations to external servers.
+
+    2) Do NOT flag normal neutral conversation, harmless jokes,
+       mild emotions, or everyday chat.
+
+    3) reason field:
+       - short and clear (2-6 words),
+       - no extra explanations.
+
+    4) safe_message field:
+       - if flagged = false -> return the original message unchanged;
+       - if flagged = true -> return a safe version by removing/replacing toxic parts
+         with neutral text (for example: "[removed by moderation]").
+
+    Important:
+    - The response must be valid JSON only.
+    - No Markdown, comments, or any additional text.

@@ -1,10 +1,12 @@
+
 package fc.plugins.fcchat.api.event;
 
 import fc.plugins.fcchat.api.FcChatApi;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class FcChatApiReadyEvent extends Event {
+public class FcChatApiReadyEvent
+extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
     private final FcChatApi api;
 
@@ -14,10 +16,9 @@ public class FcChatApiReadyEvent extends Event {
     }
 
     public FcChatApi getApi() {
-        return api;
+        return this.api;
     }
 
-    @Override
     public HandlerList getHandlers() {
         return HANDLERS;
     }
@@ -26,3 +27,4 @@ public class FcChatApiReadyEvent extends Event {
         return HANDLERS;
     }
 }
+

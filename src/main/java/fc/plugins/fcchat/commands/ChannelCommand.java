@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.commands;
 
 import fc.plugins.fcchat.FcChat;
@@ -8,7 +9,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class ChannelCommand implements CommandExecutor {
+public class ChannelCommand
+implements CommandExecutor {
     private final FcChat plugin;
     private final ConfigManager configManager;
 
@@ -22,7 +24,7 @@ public class ChannelCommand implements CommandExecutor {
             sender.sendMessage(HexUtils.translateAlternateColorCodes(this.configManager.getMessage("channel.players-only")));
             return true;
         }
-        Player player = (Player) sender;
+        Player player = (Player)sender;
         if (args.length == 0) {
             sender.sendMessage(HexUtils.translateAlternateColorCodes(this.configManager.getMessage("channel.usage")));
             return true;
@@ -33,24 +35,21 @@ public class ChannelCommand implements CommandExecutor {
             sender.sendMessage(HexUtils.translateAlternateColorCodes(this.configManager.getMessage("channel.switched-default")));
             return true;
         }
-
         if (this.plugin.getChatManager().getChannelManager().getChannel(channelId) == null) {
             sender.sendMessage(HexUtils.translateAlternateColorCodes(this.configManager.getMessage("channel.not-found")));
             return true;
         }
-
         if (!this.plugin.getChatManager().getChannelManager().hasChannelPermission(player, channelId)) {
             sender.sendMessage(HexUtils.translateAlternateColorCodes(this.configManager.getMessage("channel.no-permission")));
             return true;
         }
-
         if (!this.plugin.getApi().switchChannel(player, channelId)) {
             sender.sendMessage(HexUtils.translateAlternateColorCodes(this.configManager.getMessage("channel.switch-cancelled")));
             return true;
         }
-
         String message = this.configManager.getMessage("channel.switched").replace("{channel}", channelId);
         sender.sendMessage(HexUtils.translateAlternateColorCodes(message));
         return true;
     }
 }
+

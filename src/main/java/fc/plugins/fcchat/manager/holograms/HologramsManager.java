@@ -1,6 +1,8 @@
+
 package fc.plugins.fcchat.manager.holograms;
 
 import fc.plugins.fcchat.FcChat;
+import fc.plugins.fcchat.utils.concurrent.CompatScheduler;
 import fc.plugins.fcchat.utils.HexUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,14 +18,14 @@ import org.bukkit.entity.Player;
 public class HologramsManager {
     private final FcChat plugin;
     private final Map<UUID, List<ArmorStand>> playerHolograms;
-    private final Map<UUID, Integer> hologramsTasks;
-    private final Map<UUID, Integer> followTasks;
+    private final Map<UUID, CompatScheduler.ScheduledTask> hologramsTasks;
+    private final Map<UUID, CompatScheduler.ScheduledTask> followTasks;
 
     public HologramsManager(FcChat plugin) {
         this.plugin = plugin;
         this.playerHolograms = new HashMap<UUID, List<ArmorStand>>();
-        this.hologramsTasks = new HashMap<UUID, Integer>();
-        this.followTasks = new HashMap<UUID, Integer>();
+        this.hologramsTasks = new HashMap<UUID, CompatScheduler.ScheduledTask>();
+        this.followTasks = new HashMap<UUID, CompatScheduler.ScheduledTask>();
     }
 
     public void createHologram(Player player, String message) {
@@ -35,36 +37,53 @@ public class HologramsManager {
         List<String> lines = this.splitMessageIntoLines(formattedMessage, this.plugin.getConfigManager().getHologramMaxWordsPerLine());
         ArrayList<ArmorStand> hologramStands = new ArrayList<ArmorStand>();
         Location baseLocation = player.getLocation().add(0.0, this.plugin.getConfigManager().getHologramHeight(), 0.0);
-        for (int i = 0; i < lines.size(); ++i) {
+        int i = 0;
+        while (i < lines.size()) {
             String line = lines.get(i);
             Location standLocation = baseLocation.clone().add(0.0, -((double)i * 0.25), 0.0);
-            ArmorStand stand = (ArmorStand)((Object)player.getWorld().spawnEntity(standLocation, EntityType.ARMOR_STAND));
+            ArmorStand stand = (ArmorStand)player.getWorld().spawnEntity(standLocation, EntityType.ARMOR_STAND);
             stand.setVisible(false);
             stand.setGravity(false);
             try {
                 stand.setCanPickupItems(false);
-            } catch (NoSuchMethodError ignored) {}
+            }
+            catch (NoSuchMethodError noSuchMethodError) {
+                // empty catch block
+            }
             stand.setCustomName(HexUtils.translateAlternateColorCodes(line));
             stand.setCustomNameVisible(true);
             try {
                 stand.setMarker(true);
-            } catch (NoSuchMethodError ignored) {}
+            }
+            catch (NoSuchMethodError noSuchMethodError) {
+                // empty catch block
+            }
             try {
                 stand.setSmall(true);
-            } catch (NoSuchMethodError ignored) {}
+            }
+            catch (NoSuchMethodError noSuchMethodError) {
+                // empty catch block
+            }
             try {
                 stand.setInvulnerable(true);
-            } catch (NoSuchMethodError ignored) {}
+            }
+            catch (NoSuchMethodError noSuchMethodError) {
+                // empty catch block
+            }
             try {
                 stand.setCollidable(false);
-            } catch (NoSuchMethodError ignored) {}
+            }
+            catch (NoSuchMethodError noSuchMethodError) {
+                // empty catch block
+            }
             hologramStands.add(stand);
+            ++i;
         }
         this.playerHolograms.put(player.getUniqueId(), hologramStands);
-        int followTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.plugin, () -> this.updateHologramPosition(player), 2L, 2L);
+        CompatScheduler.ScheduledTask followTaskId = this.plugin.getCompatScheduler().runEntityTimer(player, 2L, 2L, () -> this.updateHologramPosition(player));
         this.followTasks.put(player.getUniqueId(), followTaskId);
         int duration = this.plugin.getConfigManager().getHologramDuration() * 20;
-        int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> this.removeHologram(player), duration);
+        CompatScheduler.ScheduledTask taskId = this.plugin.getCompatScheduler().runEntityLater(player, duration, () -> this.removeHologram(player));
         this.hologramsTasks.put(player.getUniqueId(), taskId);
     }
 
@@ -73,7 +92,11 @@ public class HologramsManager {
         String[] words = message.split(" ");
         StringBuilder currentLine = new StringBuilder();
         int wordCount = 0;
-        for (String word : words) {
+        String[] stringArray = words;
+        int n = words.length;
+        int n2 = 0;
+        while (n2 < n) {
+            String word = stringArray[n2];
             if (wordCount >= maxWordsPerLine && currentLine.length() > 0) {
                 lines.add(currentLine.toString().trim());
                 currentLine = new StringBuilder();
@@ -81,6 +104,7 @@ public class HologramsManager {
             }
             currentLine.append(word).append(" ");
             ++wordCount;
+            ++n2;
         }
         if (currentLine.length() > 0) {
             lines.add(currentLine.toString().trim());
@@ -98,17 +122,20 @@ public class HologramsManager {
         }
         Location playerLocation = player.getLocation();
         Location baseLocation = playerLocation.clone().add(0.0, this.plugin.getConfigManager().getHologramHeight(), 0.0);
-        for (int i = 0; i < stands.size(); ++i) {
+        int i = 0;
+        while (i < stands.size()) {
             ArmorStand stand = stands.get(i);
-            if (stand == null || stand.isDead()) continue;
-            Location newLocation = baseLocation.clone().add(0.0, -((double)i * 0.25), 0.0);
-            stand.teleport(newLocation);
+            if (stand != null && !stand.isDead()) {
+                Location newLocation = baseLocation.clone().add(0.0, -((double)i * 0.25), 0.0);
+                stand.teleport(newLocation);
+            }
+            ++i;
         }
     }
 
     public void removeHologram(Player player) {
-        Integer followTaskId;
-        Integer taskId;
+        CompatScheduler.ScheduledTask followTaskId;
+        CompatScheduler.ScheduledTask taskId;
         if (player == null) {
             return;
         }
@@ -122,11 +149,11 @@ public class HologramsManager {
             this.playerHolograms.remove(playerId);
         }
         if ((taskId = this.hologramsTasks.get(playerId)) != null) {
-            Bukkit.getScheduler().cancelTask(taskId);
+            taskId.cancel();
             this.hologramsTasks.remove(playerId);
         }
         if ((followTaskId = this.followTasks.get(playerId)) != null) {
-            Bukkit.getScheduler().cancelTask(followTaskId);
+            followTaskId.cancel();
             this.followTasks.remove(playerId);
         }
     }
@@ -145,12 +172,12 @@ public class HologramsManager {
             }
         }
         this.playerHolograms.clear();
-        for (Integer taskId : this.hologramsTasks.values()) {
-            Bukkit.getScheduler().cancelTask(taskId);
+        for (CompatScheduler.ScheduledTask taskId : this.hologramsTasks.values()) {
+            taskId.cancel();
         }
         this.hologramsTasks.clear();
-        for (Integer followTaskId : this.followTasks.values()) {
-            Bukkit.getScheduler().cancelTask(followTaskId);
+        for (CompatScheduler.ScheduledTask followTaskId : this.followTasks.values()) {
+            followTaskId.cancel();
         }
         this.followTasks.clear();
     }

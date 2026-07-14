@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.manager.config;
 
 import fc.plugins.fcchat.FcChat;
@@ -19,7 +20,6 @@ public class ConfigManager {
     private File privateMessagesFile;
     private LuckPermsIntegration luckPermsIntegration;
     private PlaceholderAPIIntegration placeholderAPI;
-    
     private String cachedLocalFormat;
     private String cachedGlobalFormat;
     private String cachedChatPrefix;
@@ -81,7 +81,7 @@ public class ConfigManager {
         this.cachedHiddenText = this.config.getBoolean("hidden-text.enabled");
         this.cachedHologramEnabled = this.config.getBoolean("hologram-messages.enabled");
     }
-    
+
     public void reloadConfig() {
         this.plugin.reloadConfig();
         this.config = this.plugin.getConfig();
@@ -89,9 +89,6 @@ public class ConfigManager {
         this.loadModeration();
         this.loadPrivateMessages();
         this.cacheValues();
-        if (this.plugin.getDiscordWebhook() != null) {
-            this.plugin.getDiscordWebhook().reload();
-        }
         if (this.plugin.getChatManager() != null) {
             this.plugin.getChatManager().reloadModeration();
         }
@@ -137,8 +134,6 @@ public class ConfigManager {
         return this.config.getInt("hidden-text.length");
     }
 
-
-
     public boolean isAntiSpamEnabled() {
         return this.moderation.getBoolean("anti-spam.enabled");
     }
@@ -172,67 +167,67 @@ public class ConfigManager {
     }
 
     public boolean isAntiCapsEnabled() {
-        return this.moderation.getBoolean("anti-caps.enabled", false);
+        return this.moderation.getBoolean("anti-caps.enabled");
     }
 
     public int getAntiCapsPercent() {
-        return this.moderation.getInt("anti-caps.percent", 50);
+        return this.moderation.getInt("anti-caps.percent");
     }
 
     public String getAntiCapsMode() {
-        return this.moderation.getString("anti-caps.mode", "lowercase");
+        return this.moderation.getString("anti-caps.mode");
     }
 
     public String getAntiCapsMessage() {
-        return this.moderation.getString("anti-caps.message", "&cToo many capital letters!");
+        return this.moderation.getString("anti-caps.message");
     }
 
     public String getAntiCapsBypassPermission() {
-        return this.moderation.getString("anti-caps.bypass-permission", "fcchat.bypass");
+        return this.moderation.getString("anti-caps.bypass-permission");
     }
 
     public boolean isAiModeratorEnabled() {
-        return this.moderation.getBoolean("ai-moderator.enabled", false);
+        return this.moderation.getBoolean("ai-moderator.enabled");
     }
 
     public boolean isAiModeratorDebugEnabled() {
-        return this.moderation.getBoolean("ai-moderator.debug", false);
+        return this.moderation.getBoolean("ai-moderator.debug");
     }
 
     public String getAiModeratorEndpoint() {
-        return this.moderation.getString("ai-moderator.endpoint", "https://openrouter.ai/api/v1/chat/completions");
+        return this.moderation.getString("ai-moderator.endpoint");
     }
 
     public String getAiModeratorApiKey() {
-        return this.moderation.getString("ai-moderator.api-key", "");
+        return this.moderation.getString("ai-moderator.api-key");
     }
 
     public String getAiModeratorModel() {
-        return this.moderation.getString("ai-moderator.model", "openai/gpt-4o-mini");
+        return this.moderation.getString("ai-moderator.model");
     }
 
     public String getAiModeratorBlockedMessage() {
-        return this.moderation.getString("ai-moderator.blocked-message", "&c[⚠] &fСообщение заблокировано &cAI-модератором&f.");
+        return this.moderation.getString("ai-moderator.blocked-message");
     }
 
     public boolean isAiModeratorLoggerEnabledByDefault() {
-        return this.moderation.getBoolean("ai-moderator.logger.enabled", false);
+        return this.moderation.getBoolean("ai-moderator.logger.enabled");
     }
 
     public String getAiModeratorLoggerPermission() {
-        return this.moderation.getString("ai-moderator.logger.permission", "fcchat.ai.logger");
+        return this.moderation.getString("ai-moderator.logger.permission");
     }
 
     public String getAiModeratorLoggerMessage() {
-        return this.moderation.getString("ai-moderator.logger.message", "&6[AI] &fСообщение игрока &e{player_name} &fбыло скрыто AI-Модератором.");
+        return this.moderation.getString("ai-moderator.logger.message");
     }
 
     public String getAiModeratorLoggerHoverMessage() {
-        return this.moderation.getString("ai-moderator.logger.hover-message", "&7Причина: &f{reason}");
+        return this.moderation.getString("ai-moderator.logger.hover-message");
     }
 
     public String getAiModeratorPrompt() {
-        return this.moderation.getString("ai-moderator.prompt", "");
+        return this.moderation.getString("ai-moderator.prompt");
     }
 
     public LuckPermsIntegration getLuckPermsIntegration() {
@@ -243,20 +238,8 @@ public class ConfigManager {
         return this.placeholderAPI;
     }
 
-    public boolean isDiscordWebhookEnabled() {
-        return this.config.getBoolean("discord-webhook.enabled");
-    }
-
-    public String getDiscordWebhookUrl() {
-        return this.config.getString("discord-webhook.url");
-    }
-
-    public String getDiscordWebhookUsername() {
-        return this.config.getString("discord-webhook.username", "Minecraft");
-    }
-
-    public String getDiscordWebhookAvatarUrl() {
-        return this.config.getString("discord-webhook.avatar-url", "");
+    public boolean isDiscordSrvEnabled() {
+        return this.config.getBoolean("DiscordSRV", false);
     }
 
     public boolean isPlayerInfoEnabled() {
@@ -344,7 +327,7 @@ public class ConfigManager {
     }
 
     public String getPingSymbol() {
-        return this.config.getString("ping-system.symbol", "@");
+        return this.config.getString("ping-system.symbol");
     }
 
     public String getPingPermission() {
@@ -396,31 +379,31 @@ public class ConfigManager {
     }
 
     public boolean isCopyEnabled() {
-        return this.config.getBoolean("copy.enabled", true);
+        return this.config.getBoolean("copy.enabled");
     }
 
     public String getCopyPermission() {
-        return this.config.getString("copy.permission", "fcchat.copy");
+        return this.config.getString("copy.permission");
     }
 
     public String getCopyHoverText() {
-        return this.config.getString("copy.hover-text", "&7[&fClick to copy&7]");
+        return this.config.getString("copy.hover-text");
     }
 
     public boolean isWorldColorsEnabled() {
-        return this.config.getBoolean("world-colors.enabled", true);
+        return this.config.getBoolean("world-colors.enabled");
     }
 
     public String getWorldColor(String worldName) {
-        return this.config.getString("world-colors.worlds." + worldName, getDefaultWorldColor());
+        return this.config.getString("world-colors.worlds." + worldName, this.getDefaultWorldColor());
     }
 
     public String getDefaultWorldColor() {
-        return this.config.getString("world-colors.default-color", "&f");
+        return this.config.getString("world-colors.default-color");
     }
 
     public String getEventPriority() {
-        return this.config.getString("event-priority", "NORMAL");
+        return this.config.getString("event-priority");
     }
 
     public FileConfiguration getPrivateMessageConfig() {
@@ -428,18 +411,18 @@ public class ConfigManager {
     }
 
     public boolean isPingToastEnabled() {
-        return this.config.getBoolean("ping-system.toast.enabled", true);
+        return this.config.getBoolean("ping-system.toast.enabled");
     }
 
     public String getPingToastText() {
-        return this.config.getString("ping-system.toast.text", "&fТебя упомянули в чате!");
+        return this.config.getString("ping-system.toast.text");
     }
 
     public boolean isCommandEnabled(String command) {
-        return this.config.getBoolean("commands." + command + ".enabled", true);
+        return this.config.getBoolean("commands." + command + ".enabled");
     }
 
     public boolean isCommandAliasEnabled(String command, String alias) {
-        return this.config.getBoolean("commands." + command + ".aliases." + alias, true);
+        return this.config.getBoolean("commands." + command + ".aliases." + alias);
     }
 }

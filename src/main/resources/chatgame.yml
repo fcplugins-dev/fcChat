@@ -1,5 +1,5 @@
 settings:
-  enabled: true  # Enable/disable game chat
+  enabled: true  # Enable/disable chat games
   timer: 900  # Time between games in seconds
   game-duration: 60  # Game duration in seconds
   sound:
@@ -21,7 +21,7 @@ games:
       - "&9&n▌&f                       &9&lChat Game"
       - "&9&n▌&f"
       - "&9&n▌&f           &9🎉 &fPlayer &9{player} &fwon&9!"
-      - "&9&n▌&f               &9📊 &fAnswer was&9: {answer}"
+      - "&9&n▌&f               &9📊 &fThe answer was&9: {answer}"
       - "&9&n▌&f"
     end-messages:
       - "&9&n▌&f"
@@ -46,7 +46,7 @@ games:
       - "&9&n▌&f"
       - "&9&n▌&f                             &9&lChat Game"
       - "&9&n▌&f"
-      - "&9&n▌&f                   &9📝 &fDecode the word&9: {word}"
+      - "&9&n▌&f                   &9📝 &fUnscramble the word&9: {word}"
       - "&9&n▌&f              &9💰 &fFirst correct answer gets a reward&9!"
       - "&9&n▌&f"
     win-messages:
@@ -54,7 +54,7 @@ games:
       - "&9&n▌&f                           &9&lChat Game"
       - "&9&n▌&f"
       - "&9&n▌&f                &9🎉 &fPlayer &9{player} &fwon&9!"
-      - "&9&n▌&f                     &9📝 &fWord&9: {answer}"
+      - "&9&n▌&f                     &9📝 &fThe word&9: {answer}"
       - "&9&n▌&f"
     end-messages:
       - "&9&n▌&f"
@@ -87,7 +87,7 @@ games:
       - "&9&n▌&f                        &9&lChat Game"
       - "&9&n▌&f"
       - "&9&n▌&f             &9🎉 &fPlayer &9{player} &fwon&9!"
-      - "&9&n▌&f                  &9❓ &fAnswer was&9: {answer}"
+      - "&9&n▌&f                  &9❓ &fThe answer was&9: {answer}"
       - "&9&n▌&f"
     end-messages:
       - "&9&n▌&f"

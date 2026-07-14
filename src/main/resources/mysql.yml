@@ -9,9 +9,9 @@ mysql:
 
 sync:
   enabled: true
-  server-name: "server1" # IMPORTANT: specify a unique name on each server!
+  server-name: "server1" # IMPORTANT: specify unique name on each server!
   sync-channels:
-    - "global" # Only global is temporarily available!
+    - "global" # Only global channel is available for now!
 
 # (not recommended to change)
 connection:

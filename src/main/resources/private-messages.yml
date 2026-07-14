@@ -2,10 +2,10 @@ private-messages:
   enabled: true
   permission: "fcchat.msg"
   cooldown: 3
-  cooldown-message: "&c[✘] &fПодождите &c{time} &fсек. перед следующим сообщением&c!"
+  cooldown-message: "&c[✘] &fWait &c{time} &fseconds before sending next message&c!"
   format:
-    sender: "&7[&6Вы &7-> &e{receiver}&7] &f{message}"
-    receiver: "&7[&e{sender} &7-> &6Вы&7] &f{message}"
+    sender: "&7[&6You &7-> &e{receiver}&7] &f{message}"
+    receiver: "&7[&e{sender} &7-> &6You&7] &f{message}"
   sounds:
     sender:
       enabled: true
@@ -22,10 +22,10 @@ reply:
   enabled: true
   permission: "fcchat.reply"
   cooldown: 3
-  cooldown-message: "&c[✘] &fПодождите &c{time} &fсек. перед следующим ответом&c!"
+  cooldown-message: "&c[✘] &fWait &c{time} &fseconds before replying again&c!"
   format:
-    sender: "&7[&6Вы &7-> &e{receiver}&7] &f{message}"
-    receiver: "&7[&e{sender} &7-> &6Вы&7] &f{message}"
+    sender: "&7[&6You &7-> &e{receiver}&7] &f{message}"
+    receiver: "&7[&e{sender} &7-> &6You&7] &f{message}"
   sounds:
     sender:
       enabled: true
@@ -42,7 +42,7 @@ broadcast:
   enabled: true
   permission: "fcchat.broadcast"
   cooldown: 10
-  cooldown-message: "&c[✘] &fПодождите &c{time} &fсек. перед следующим объявлением&c!"
+  cooldown-message: "&c[✘] &fWait &c{time} &fseconds before next broadcast&c!"
   format: "&c[&4BROADCAST&c] &7(&f{sender}&7) &f{message}"
   sounds:
     enabled: true

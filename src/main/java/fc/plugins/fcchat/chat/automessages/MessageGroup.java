@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.chat.automessages;
 
 import java.util.List;
@@ -19,3 +20,4 @@ class MessageGroup {
         return this.sound;
     }
 }
+

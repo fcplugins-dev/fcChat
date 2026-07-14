@@ -1,10 +1,12 @@
 # # # # # # # # # # # # # # # # # # # # # # #
 #                                           #
-#           Plugin developed by             #
+#        Plugin created by studio          #
 #                fcPlugins                  #
 #     https://t.me/fcplugins_minecraft      #
 #                                           #
 # # # # # # # # # # # # # # # # # # # # # # #
+
+DiscordSRV: false
 
 chat:
   enabled: true
@@ -12,15 +14,23 @@ chat:
 
 local-chat:
   radius: 100
-  format: "&bⓁ %prefix%&f{player}%suffix%&b: &f{message}"
+  format: "&bⓁ %prefix%{player}%suffix%&b: &f{message}"
 
 global-chat:
-  format: "&6Ⓖ %prefix%&f{player}%suffix%&6: &f{message}"
+  format: "&6Ⓖ %prefix%{player}%suffix%&6: &f{message}"
 
 copy:
   enabled: true
   permission: "fcchat.copy"
-  hover-text: "&7[&fCopy message&7]"
+  hover-text: "&7[&fClick to copy&7]"
+
+world-colors:
+  enabled: true
+  default-color: "&f"
+  worlds:
+    world: "&a"
+    world_nether: "&c"
+    world_the_end: "&6"
 
 color-chat:
   enabled: true
@@ -36,22 +46,17 @@ player-info:
   enabled: true
   permission: "fcchat.info"
   lines:
-    - "&7[⚠] &fPlayer Information&7: %player_name%"
+    - "&7[⚠] &fPlayer information&7: %player_name%"
     - "&f"
-    - "&7» &fLast joined&7: %player_last_played_formatted%"
-    - "&7» &fCountry&7: %player_locale_country%"
-    - "&7» &fIP Address&7: %player_ip%"
+    - "&7» &fLast login&7: %player_last_played_formatted%"
+    - "&7» &fIP address&7: %player_ip%"
     - "&7» &fPing&7: %player_ping%"
 
-discord:
+discord-webhook:
   enabled: false
-  webhook-url: ""
-  message-format: "{player}: {message}"
-
-spy:
-  enabled: true
-  permission: "fcchat.spy"
-  message-format: "&9Ⓢ &7{formatted}"
+  url: ""
+  username: "Minecraft"
+  avatar-url: ""
 
 join-leave-messages:
   enabled: true
@@ -65,6 +70,25 @@ join-leave-messages:
 disabled-worlds:
   - "disableWorld1"
   - "disableWorld2"
+
+commands:
+  msg:
+    enabled: true
+    aliases:
+      tell: true
+      whisper: true
+      w: true
+  reply:
+    enabled: true
+    aliases:
+      r: true
+  clear:
+    enabled: true
+  broadcast:
+    enabled: true
+    aliases:
+      bc: true
+      announce: true
 
 hologram-messages:
   enabled: false
@@ -92,9 +116,20 @@ sounds:
 
 ping-system:
   enabled: true
+  symbol: "@"
   permission: "fcchat.ping"
   everyone-permission: "fcchat.ping.everyone"
   ping-color: "&e"
   everyone-ping-color: "&c"
 
 update-check: true
+
+# Event priority for chat processing
+# Available options: LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR
+# LOWEST - First to process (before other plugins)
+# LOW - Early processing
+# NORMAL - Default processing (recommended)
+# HIGH - Late processing
+# HIGHEST - Last to process (after other plugins)
+# MONITOR - Only for monitoring (cannot cancel events)
+event-priority: "NORMAL"

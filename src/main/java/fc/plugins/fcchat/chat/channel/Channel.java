@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.chat.channel;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -28,7 +29,7 @@ public class Channel {
         String format = section.getString("format", "&7[&b" + name + "&7] {player}: &7{message}");
         String permission = section.getString("permission", "fcchat.channel." + id);
         String placeholder = section.getString("placeholder", null);
-        String placeholderNoClan = section.getString("placeholder_no_clan", "&7Нету");
+        String placeholderNoClan = section.getString("placeholder_no_clan", "&7\u041d\u0435\u0442\u0443");
         String symbol = section.getString("symbol", null);
         boolean enabled = section.getBoolean("enabled", true);
         return new Channel(id, name, format, permission, placeholder, placeholderNoClan, symbol, enabled);
@@ -74,3 +75,4 @@ public class Channel {
         return this.symbol != null && !this.symbol.isEmpty();
     }
 }
+

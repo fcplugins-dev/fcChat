@@ -1,6 +1,7 @@
+
 package fc.plugins.fcchat.chat;
 
-import fc.plugins.fcchat.config.ConfigManager;
+import fc.plugins.fcchat.manager.config.ConfigManager;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -12,50 +13,48 @@ public class SoundManager {
     }
 
     public void playMessageSound(Player player) {
-        if (!configManager.isMessageSoundEnabled()) {
-            return;
-        }
-
-        String soundName = configManager.getMessageSound();
-        float volume = configManager.getMessageSoundVolume();
-        float pitch = configManager.getMessageSoundPitch();
-
-        try {
-            Sound sound = Sound.valueOf(soundName);
-            player.playSound(player.getLocation(), sound, volume, pitch);
-        } catch (IllegalArgumentException e) {
+        if (this.configManager.isMessageSoundEnabled()) {
+            String soundName = this.configManager.getMessageSound();
+            float volume = this.configManager.getMessageSoundVolume();
+            float pitch = this.configManager.getMessageSoundPitch();
+            try {
+                Sound sound = Sound.valueOf(soundName);
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+            catch (IllegalArgumentException illegalArgumentException) {
+                // empty catch block
+            }
         }
     }
 
     public void playPingSound(Player player) {
-        if (!configManager.isPingSoundEnabled()) {
-            return;
-        }
-
-        String soundName = configManager.getPingSound();
-        float volume = configManager.getPingSoundVolume();
-        float pitch = configManager.getPingSoundPitch();
-
-        try {
-            Sound sound = Sound.valueOf(soundName);
-            player.playSound(player.getLocation(), sound, volume, pitch);
-        } catch (IllegalArgumentException e) {
+        if (this.configManager.isPingSoundEnabled()) {
+            String soundName = this.configManager.getPingSound();
+            float volume = this.configManager.getPingSoundVolume();
+            float pitch = this.configManager.getPingSoundPitch();
+            try {
+                Sound sound = Sound.valueOf(soundName);
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+            catch (IllegalArgumentException illegalArgumentException) {
+                // empty catch block
+            }
         }
     }
 
     public void playEveryonePingSound(Player player) {
-        if (!configManager.isEveryonePingSoundEnabled()) {
-            return;
-        }
-
-        String soundName = configManager.getEveryonePingSound();
-        float volume = configManager.getEveryonePingSoundVolume();
-        float pitch = configManager.getEveryonePingSoundPitch();
-
-        try {
-            Sound sound = Sound.valueOf(soundName);
-            player.playSound(player.getLocation(), sound, volume, pitch);
-        } catch (IllegalArgumentException e) {
+        if (this.configManager.isEveryonePingSoundEnabled()) {
+            String soundName = this.configManager.getEveryonePingSound();
+            float volume = this.configManager.getEveryonePingSoundVolume();
+            float pitch = this.configManager.getEveryonePingSoundPitch();
+            try {
+                Sound sound = Sound.valueOf(soundName);
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+            catch (IllegalArgumentException illegalArgumentException) {
+                // empty catch block
+            }
         }
     }
 }
+

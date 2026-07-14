@@ -1,0 +1,4 @@
+jdk:
+  - openjdk11
+install:
+  - mvn -B -DskipTests clean install

@@ -1,18 +1,18 @@
+
 package fc.plugins.fcchat.moderation;
 
-import fc.plugins.fcchat.config.ConfigManager;
-import fc.plugins.fcchat.data.PlayerTimeManager;
+import fc.plugins.fcchat.manager.config.ConfigManager;
 import fc.plugins.fcchat.utils.HexUtils;
-import org.bukkit.entity.Player;
-
+import fc.plugins.fcchat.utils.data.PlayerTimeManager;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.entity.Player;
 
 public class AntiSpam {
     private final ConfigManager configManager;
     private final PlayerTimeManager playerTimeManager;
-    private final Map<UUID, Long> lastMessageTime = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastMessageTime = new ConcurrentHashMap<UUID, Long>();
 
     public AntiSpam(ConfigManager configManager, PlayerTimeManager playerTimeManager) {
         this.configManager = configManager;
@@ -20,67 +20,110 @@ public class AntiSpam {
     }
 
     public boolean isSpam(Player player) {
-        if (!configManager.isAntiSpamEnabled()) {
+        double d = 0;
+        long l = 0;
+        if (!this.configManager.isAntiSpamEnabled()) {
             return false;
         }
-
-        String bypassPermission = configManager.getAntiSpamBypassPermission();
+        String bypassPermission = this.configManager.getAntiSpamBypassPermission();
         if (bypassPermission != null && player.hasPermission(bypassPermission)) {
             return false;
         }
-
         UUID playerId = player.getUniqueId();
         long currentTime = System.currentTimeMillis();
-        long lastTime = lastMessageTime.getOrDefault(playerId, 0L);
-        double cooldown = configManager.getAntiSpamCooldown() * 1000;
-
-        if (currentTime - lastTime < cooldown) {
+        long lastTime = this.lastMessageTime.getOrDefault(playerId, 0L);
+        double cooldown = this.configManager.getAntiSpamCooldown() * 1000.0;
+        if ((double)(currentTime - l) < d) {
             return true;
         }
-
-        lastMessageTime.put(playerId, currentTime);
+        this.lastMessageTime.put(playerId, currentTime);
         return false;
     }
 
     public boolean isNewPlayerBlocked(Player player) {
-        if (!configManager.isNewPlayerChatEnabled()) {
+        long blockTime;
+        if (!this.configManager.isNewPlayerChatEnabled()) {
             return false;
         }
-
-        String bypassPermission = configManager.getNewPlayerBypassPermission();
+        String bypassPermission = this.configManager.getNewPlayerBypassPermission();
         if (bypassPermission != null && player.hasPermission(bypassPermission)) {
             return false;
         }
+        long worldPlaytime = this.playerTimeManager.getTimeSinceFirstJoin(player);
+        return worldPlaytime < (blockTime = (long)(this.configManager.getNewPlayerBlockTime() * 1000));
+    }
 
-        long totalPlaytime = playerTimeManager.getTotalPlaytimeWithSession(player);
-        long blockTime = configManager.getNewPlayerBlockTime() * 1000;
+    public boolean hasTooManyCaps(String message, Player player) {
+        if (!this.configManager.isAntiCapsEnabled()) {
+            return false;
+        }
+        String bypassPermission = this.configManager.getAntiCapsBypassPermission();
+        if (bypassPermission != null && player.hasPermission(bypassPermission)) {
+            return false;
+        }
+        int capsCount = 0;
+        int letterCount = 0;
+        char[] cArray = message.toCharArray();
+        int n = cArray.length;
+        int n2 = 0;
+        while (n2 < n) {
+            char c = cArray[n2];
+            if (Character.isLetter(c)) {
+                ++letterCount;
+                if (Character.isUpperCase(c)) {
+                    ++capsCount;
+                }
+            }
+            ++n2;
+        }
+        if (letterCount == 0) {
+            return false;
+        }
+        int capsPercent = capsCount * 100 / letterCount;
+        int maxPercent = this.configManager.getAntiCapsPercent();
+        return capsPercent > maxPercent;
+    }
 
-        return totalPlaytime < blockTime;
+    public String processCaps(String message, Player player) {
+        if (!this.hasTooManyCaps(message, player)) {
+            return message;
+        }
+        String mode = this.configManager.getAntiCapsMode();
+        if ("lowercase".equalsIgnoreCase(mode)) {
+            return message.toLowerCase();
+        }
+        return message;
+    }
+
+    public String getAntiCapsMessage() {
+        String message = this.configManager.getAntiCapsMessage();
+        return HexUtils.translateAlternateColorCodes(message);
     }
 
     public String getAntiSpamMessage(double remainingTime) {
-        String message = configManager.getAntiSpamMessage();
+        String message = this.configManager.getAntiSpamMessage();
         return HexUtils.translateAlternateColorCodes(message.replace("{time}", String.format("%.0f", remainingTime)));
     }
 
     public String getNewPlayerMessage(double remainingTime) {
-        String message = configManager.getNewPlayerMessage();
+        String message = this.configManager.getNewPlayerMessage();
         return HexUtils.translateAlternateColorCodes(message.replace("{time}", String.format("%.0f", remainingTime)));
     }
 
     public double getRemainingSpamTime(Player player) {
         UUID playerId = player.getUniqueId();
         long currentTime = System.currentTimeMillis();
-        long lastTime = lastMessageTime.getOrDefault(playerId, 0L);
-        double cooldown = configManager.getAntiSpamCooldown() * 1000;
-        double remaining = (cooldown - (currentTime - lastTime)) / 1000.0;
-        return Math.max(0, remaining);
+        long lastTime = this.lastMessageTime.getOrDefault(playerId, 0L);
+        double cooldown = this.configManager.getAntiSpamCooldown() * 1000.0;
+        double remaining = (cooldown - (double)(currentTime - lastTime)) / 1000.0;
+        return Math.max(0.0, remaining);
     }
 
     public double getRemainingNewPlayerTime(Player player) {
-        long totalPlaytime = playerTimeManager.getTotalPlaytimeWithSession(player);
-        long blockTime = configManager.getNewPlayerBlockTime() * 1000;
-        double remaining = (blockTime - totalPlaytime) / 1000.0;
-        return Math.max(0, remaining);
+        long worldPlaytime = this.playerTimeManager.getTimeSinceFirstJoin(player);
+        long blockTime = this.configManager.getNewPlayerBlockTime() * 1000;
+        double remaining = (double)(blockTime - worldPlaytime) / 1000.0;
+        return Math.max(0.0, remaining);
     }
-} 
+}
+

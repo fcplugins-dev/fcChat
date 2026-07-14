@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.commands;
 
 import fc.plugins.fcchat.FcChat;
@@ -7,7 +8,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-public class ClearCommand implements CommandExecutor {
+public class ClearCommand
+implements CommandExecutor {
     private final FcChat plugin;
     private final ConfigManager configManager;
 
@@ -25,3 +27,4 @@ public class ClearCommand implements CommandExecutor {
         return true;
     }
 }
+

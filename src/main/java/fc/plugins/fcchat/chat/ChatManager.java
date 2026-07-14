@@ -1,46 +1,47 @@
 package fc.plugins.fcchat.chat;
 
 import fc.plugins.fcchat.FcChat;
-import fc.plugins.fcchat.channel.ChannelManager;
-import fc.plugins.fcchat.config.ConfigManager;
-import fc.plugins.fcchat.data.PlayerTimeManager;
-import fc.plugins.fcchat.function.Copy;
-import fc.plugins.fcchat.holograms.HologramsManager;
-import fc.plugins.fcchat.holograms.HologramsManager;
-import fc.plugins.fcchat.sync.MessageSynchronizer;
-import fc.plugins.fcchat.function.Spy;
+import fc.plugins.fcchat.chat.channel.ChannelManager;
 import fc.plugins.fcchat.integration.LuckPermsIntegration;
 import fc.plugins.fcchat.integration.PlaceholderAPIIntegration;
-import fc.plugins.fcchat.integration.DiscordIntegration;
+import fc.plugins.fcchat.manager.config.ConfigManager;
+import fc.plugins.fcchat.manager.holograms.HologramsManager;
+import fc.plugins.fcchat.moderation.AiModerator;
+import fc.plugins.fcchat.moderation.AntiSpam;
 import fc.plugins.fcchat.moderation.Filter;
 import fc.plugins.fcchat.moderation.LinkBlocker;
-import fc.plugins.fcchat.moderation.AntiSpam;
 import fc.plugins.fcchat.utils.HexUtils;
-import net.md_5.bungee.api.chat.TextComponent;
+import fc.plugins.fcchat.utils.data.PlayerTimeManager;
+import fc.plugins.fcchat.utils.function.Copy;
+import fc.plugins.fcchat.utils.sync.MessageSynchronizer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.ChatColor;
-import java.util.List;
-import java.util.ArrayList;
 
 public class ChatManager implements Listener {
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.builder().character('\u00A7').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
+
     private final FcChat plugin;
     private final ConfigManager configManager;
     private final PlayerTimeManager playerTimeManager;
     private final ChannelManager channelManager;
     private final Copy copyFunction;
     private final MessageSynchronizer messageSynchronizer;
-    private final Spy spyFunction;
     private final Filter filter;
     private final LinkBlocker linkBlocker;
     private final AntiSpam antiSpam;
-    private final PlayerInfoManager playerInfoManager;
+    private final AiModerator aiModerator;
     private final HologramsManager hologramsManager;
     private final SoundManager soundManager;
     private final PingManager pingManager;
@@ -51,430 +52,317 @@ public class ChatManager implements Listener {
         this.playerTimeManager = playerTimeManager;
         this.messageSynchronizer = messageSynchronizer;
         this.hologramsManager = hologramsManager;
-        this.channelManager = new ChannelManager(plugin, configManager, playerTimeManager, messageSynchronizer, hologramsManager);
+        this.channelManager = new ChannelManager(plugin, configManager, playerTimeManager);
         this.copyFunction = new Copy(configManager);
-        this.spyFunction = new Spy(configManager);
         this.filter = new Filter(configManager);
         this.linkBlocker = new LinkBlocker(configManager);
         this.antiSpam = new AntiSpam(configManager, playerTimeManager);
-        this.playerInfoManager = new PlayerInfoManager(configManager, playerTimeManager);
+        this.aiModerator = plugin.getAiModerator();
         this.soundManager = new SoundManager(configManager);
-        this.pingManager = new PingManager(configManager, soundManager);
+        this.pingManager = new PingManager(configManager, this.soundManager);
     }
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        if (!this.plugin.getConfig().getBoolean("chat.enabled", true)) {
+            return;
+        }
         Player player = event.getPlayer();
         String message = event.getMessage();
-        String prefix = configManager.getChatPrefix();
-
-        if (configManager.getDisabledWorlds().contains(player.getWorld().getName())) {
+        String prefix = this.configManager.getChatPrefix();
+        if (this.configManager.getDisabledWorlds().contains(player.getWorld().getName())) {
             event.setCancelled(true);
             return;
         }
-
         boolean hasBypass = player.hasPermission("fcchat.bypass");
-
-        if (linkBlocker.isBlocked(message) && !hasBypass) {
+        if (this.linkBlocker.isBlocked(message, player)) {
             event.setCancelled(true);
-            player.sendMessage(HexUtils.translateAlternateColorCodes(linkBlocker.getBlockedMessage()));
+            player.sendMessage(HexUtils.translateAlternateColorCodes(this.linkBlocker.getBlockedMessage()));
             return;
         }
-
         if (message.contains("%") && message.indexOf("%") != message.lastIndexOf("%")) {
             event.setCancelled(true);
             return;
         }
-
-        if (message.contains("||") && !player.hasPermission(configManager.getHiddenTextPermission())) {
+        if (message.contains("||") && !player.hasPermission(this.configManager.getHiddenTextPermission())) {
             event.setCancelled(true);
             return;
         }
-
-        if (antiSpam.isSpam(player) && !hasBypass) {
+        if (this.antiSpam.isSpam(player) && !hasBypass) {
             event.setCancelled(true);
-            double remainingTime = antiSpam.getRemainingSpamTime(player);
-            player.sendMessage(antiSpam.getAntiSpamMessage(remainingTime));
+            double remainingTime = this.antiSpam.getRemainingSpamTime(player);
+            player.sendMessage(this.antiSpam.getAntiSpamMessage(remainingTime));
             return;
         }
-
-        if (antiSpam.isNewPlayerBlocked(player) && !hasBypass) {
+        if (this.antiSpam.isNewPlayerBlocked(player) && !hasBypass) {
             event.setCancelled(true);
-            double remainingTime = antiSpam.getRemainingNewPlayerTime(player);
-            player.sendMessage(antiSpam.getNewPlayerMessage(remainingTime));
+            double remainingTime = this.antiSpam.getRemainingNewPlayerTime(player);
+            player.sendMessage(this.antiSpam.getNewPlayerMessage(remainingTime));
             return;
         }
-
+        if (this.antiSpam.hasTooManyCaps(message, player) && !hasBypass) {
+            String mode = this.configManager.getAntiCapsMode();
+            if ("block".equalsIgnoreCase(mode)) {
+                event.setCancelled(true);
+                player.sendMessage(this.antiSpam.getAntiCapsMessage());
+                return;
+            }
+            message = this.antiSpam.processCaps(message, player);
+        }
         event.setCancelled(true);
-
-        String currentChannel = channelManager.getPlayerChannel(player.getUniqueId());
-        if (!currentChannel.equals("default")) {
-            channelManager.handleChannelChat(player, message);
+        if (this.channelManager.getChannelBySymbol(message.substring(0, 1)) != null) {
+            this.channelManager.handleSymbolChat(player, message);
             return;
         }
-
+        String currentChannel = this.channelManager.getPlayerChannel(player.getUniqueId());
+        if (!currentChannel.equals("default")) {
+            this.channelManager.handleChannelChat(player, message);
+            return;
+        }
         if (message.startsWith(prefix)) {
             String chatMessage = message.substring(prefix.length());
-            
             if (chatMessage.trim().isEmpty()) {
                 return;
             }
-
             if (chatMessage.startsWith(" ")) {
-                handleLocalChat(player, chatMessage.substring(1));
-                String formattedConsoleMessage = formatMessage(configManager.getLocalChatFormat(), player, chatMessage.substring(1), true);
-                plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
-            } else {
-                handleGlobalChat(player, chatMessage);
-                String formattedConsoleMessage = formatMessage(configManager.getGlobalChatFormat(), player, chatMessage, true);
-                plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
+                chatMessage = chatMessage.substring(1);
             }
+            this.handleGlobalChat(player, chatMessage);
+            String formattedConsoleMessage = this.formatMessage(this.configManager.getGlobalChatFormat(), player, chatMessage);
+            this.plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
         } else {
-            handleLocalChat(player, message);
-            String formattedConsoleMessage = formatMessage(configManager.getLocalChatFormat(), player, message, true);
-            plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
+            this.handleLocalChat(player, message);
+            String formattedConsoleMessage = this.formatMessage(this.configManager.getLocalChatFormat(), player, message);
+            this.plugin.getLogger().info(ChatColor.stripColor(formattedConsoleMessage));
         }
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        playerTimeManager.onPlayerJoin(event.getPlayer());
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        playerTimeManager.onPlayerQuit(event.getPlayer());
-        if (hologramsManager != null) {
-            hologramsManager.onPlayerQuit(event.getPlayer());
+        if (this.hologramsManager != null) {
+            this.hologramsManager.onPlayerQuit(event.getPlayer());
         }
     }
 
     public void reloadModeration() {
-        filter.reloadFilter();
-        linkBlocker.reloadModeration();
+        this.filter.reloadFilter();
+        this.linkBlocker.reloadModeration();
     }
 
     public ChannelManager getChannelManager() {
-        return channelManager;
-    }
-
-    public Spy getSpyFunction() {
-        return spyFunction;
+        return this.channelManager;
     }
 
     public PlayerTimeManager getPlayerTimeManager() {
-        return playerTimeManager;
+        return this.playerTimeManager;
     }
 
-        private void handleLocalChat(Player sender, String message) {
-        String filteredMessage = filter.filterMessage(message, sender);
-        PingManager.PingResult pingResult = pingManager.processPings(filteredMessage, sender);
-        String processedMessage = MessageProcessor.processHiddenText(pingResult.getProcessedMessage(), configManager);
-        String formattedMessage = formatMessage(configManager.getLocalChatFormat(), sender, processedMessage, false);
-        int radius = configManager.getLocalChatRadius();
+    public Copy getCopyFunction() {
+        return this.copyFunction;
+    }
+
+    private void handleLocalChat(Player sender, String message) {
+        String originalMessage = message;
+        String filteredMessage = this.filter.filterMessage(message, sender);
+        boolean wasFiltered = this.filter.wasMessageFiltered(originalMessage, filteredMessage);
+        PingManager.PingResult pingResult = this.pingManager.processPings(filteredMessage, sender);
+        String processedMessage = MessageProcessor.processHiddenText(pingResult.getProcessedMessage(), this.configManager);
+        int radius = this.configManager.getLocalChatRadius();
         Location senderLocation = sender.getLocation();
-
-        List<Player> nearbyPlayers = new ArrayList<>();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getWorld().equals(sender.getWorld()) &&
-                player.getLocation().distance(senderLocation) <= radius) {
-                
-                if (shouldHideMessage(sender, player)) {
-                    continue;
-                }
-                nearbyPlayers.add(player);
-                TextComponent finalComponent = createFinalMessageComponent(formattedMessage, pingResult.getProcessedMessage(), message, sender, player);
-                player.spigot().sendMessage(finalComponent);
+        int radiusSquared = radius * radius;
+        Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+        ArrayList<Player> recipients = new ArrayList<>(onlinePlayers.size());
+        for (Player player : onlinePlayers) {
+            if (!player.getWorld().equals(sender.getWorld()) || player.getLocation().distanceSquared(senderLocation) > (double) radiusSquared) {
+                continue;
+            }
+            recipients.add(player);
+        }
+        HoverEvent<Component> hiddenTextHover = MessageProcessor.createHiddenTextHover(pingResult.getProcessedMessage(), this.configManager);
+        boolean aiActive = this.aiModerator.isActiveFor(sender);
+        if (aiActive) {
+            Component senderPreview = this.buildMessageComponent(sender, sender, processedMessage, originalMessage, wasFiltered, hiddenTextHover, this.configManager.getLocalChatFormat());
+            sender.sendMessage(senderPreview);
+            AiModerator.Decision decision = this.aiModerator.moderate(sender, originalMessage);
+            if (decision.isBlocked()) {
+                this.aiModerator.registerBlocked(sender, decision.getReason());
+                sender.sendMessage(this.aiModerator.getBlockedMessage());
+                return;
             }
         }
-
-        soundManager.playMessageSound(sender);
-        pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
-
-        DiscordIntegration discord = configManager.getDiscordIntegration();
-        if (discord.isEnabled()) {
-            discord.sendMessage(sender, pingResult.getProcessedMessage());
-        }
-
-        if (configManager.isSpyEnabled()) {
-            spyFunction.sendSpyMessage(sender, pingResult.getProcessedMessage(), formattedMessage);
-        }
-        
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            if (hologramsManager != null) {
-                hologramsManager.createHologram(sender, pingResult.getProcessedMessage());
+        for (Player player : recipients) {
+            if (aiActive && player.equals(sender)) {
+                continue;
             }
-        });
+            Component finalComponent = this.buildMessageComponent(sender, player, processedMessage, originalMessage, wasFiltered, hiddenTextHover, this.configManager.getLocalChatFormat());
+            player.sendMessage(finalComponent);
+        }
+        this.soundManager.playMessageSound(sender);
+        this.pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
+        if (this.hologramsManager != null && this.configManager.isHologramMessagesEnabled()) {
+            String hologramMessage = pingResult.getProcessedMessage();
+            this.plugin.getCompatScheduler().runEntity(sender, () -> this.hologramsManager.createHologram(sender, hologramMessage));
+        }
     }
 
     private void handleGlobalChat(Player sender, String message) {
-        String filteredMessage = filter.filterMessage(message, sender);
-        PingManager.PingResult pingResult = pingManager.processPings(filteredMessage, sender);
-        String processedMessage = MessageProcessor.processHiddenText(pingResult.getProcessedMessage(), configManager);
-        String formattedMessage = formatMessage(configManager.getGlobalChatFormat(), sender, processedMessage, false);
-
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (shouldHideMessage(sender, player)) {
+        String originalMessage = message;
+        String filteredMessage = this.filter.filterMessage(message, sender);
+        boolean wasFiltered = this.filter.wasMessageFiltered(originalMessage, filteredMessage);
+        PingManager.PingResult pingResult = this.pingManager.processPings(filteredMessage, sender);
+        String processedMessage = MessageProcessor.processHiddenText(pingResult.getProcessedMessage(), this.configManager);
+        Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+        HoverEvent<Component> hiddenTextHover = MessageProcessor.createHiddenTextHover(pingResult.getProcessedMessage(), this.configManager);
+        boolean aiActive = this.aiModerator.isActiveFor(sender);
+        if (aiActive) {
+            Component senderPreview = this.buildMessageComponent(sender, sender, processedMessage, originalMessage, wasFiltered, hiddenTextHover, this.configManager.getGlobalChatFormat());
+            sender.sendMessage(senderPreview);
+            AiModerator.Decision decision = this.aiModerator.moderate(sender, originalMessage);
+            if (decision.isBlocked()) {
+                this.aiModerator.registerBlocked(sender, decision.getReason());
+                sender.sendMessage(this.aiModerator.getBlockedMessage());
+                return;
+            }
+        }
+        for (Player player : onlinePlayers) {
+            if (aiActive && player.equals(sender)) {
                 continue;
             }
-
-            TextComponent finalComponent = createFinalMessageComponent(formattedMessage, pingResult.getProcessedMessage(), message, sender, player);
-            player.spigot().sendMessage(finalComponent);
+            Component finalComponent = this.buildMessageComponent(sender, player, processedMessage, originalMessage, wasFiltered, hiddenTextHover, this.configManager.getGlobalChatFormat());
+            player.sendMessage(finalComponent);
         }
-
-        soundManager.playMessageSound(sender);
-        pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
-
-        messageSynchronizer.syncGlobalMessage(sender, pingResult.getProcessedMessage());
-
-        DiscordIntegration discord = configManager.getDiscordIntegration();
-        if (discord.isEnabled()) {
-            discord.sendMessage(sender, pingResult.getProcessedMessage());
-        }
-        
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            if (hologramsManager != null) {
-                hologramsManager.createHologram(sender, pingResult.getProcessedMessage());
-            }
-        });
-    }
-
-    private boolean shouldHideMessage(Player sender, Player receiver) {
-        return false;
-    }
-
-    private TextComponent createFinalMessageComponent(String formattedMessage, String filteredMessage, String originalMessage, Player sender, Player receiver) {
-        String processedMessage = MessageProcessor.processHiddenText(filteredMessage, configManager);
-        String finalFormattedMessage = formattedMessage;
-        
-        boolean hasHiddenText = filteredMessage.contains("||") && sender.hasPermission(configManager.getHiddenTextPermission());
-        boolean wasFiltered = !originalMessage.equals(filteredMessage);
-        boolean canReadBlocked = receiver.hasPermission("fcchat.read");
-        boolean canSeePlayerInfo = receiver.hasPermission(configManager.getPlayerInfoPermission()) && configManager.isPlayerInfoEnabled();
-        
-        if (canSeePlayerInfo) {
-            return createPlayerInfoMessage(formattedMessage, filteredMessage, originalMessage, sender, receiver, hasHiddenText, wasFiltered, canReadBlocked);
-        }
-        
-        if (hasHiddenText && finalFormattedMessage.contains(processedMessage)) {
-            return MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, configManager);
-        }
-        
-        if (wasFiltered && canReadBlocked && finalFormattedMessage.contains(processedMessage)) {
-            String prefix = finalFormattedMessage.substring(0, finalFormattedMessage.lastIndexOf(processedMessage));
-            String suffix = finalFormattedMessage.substring(finalFormattedMessage.lastIndexOf(processedMessage) + processedMessage.length());
-            
-            net.md_5.bungee.api.chat.BaseComponent[] prefixComponents = TextComponent.fromLegacyText(prefix);
-            net.md_5.bungee.api.chat.BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
-            net.md_5.bungee.api.chat.BaseComponent[] suffixComponents = TextComponent.fromLegacyText(suffix);
-            
-            TextComponent prefixComponent = new TextComponent(prefixComponents);
-            TextComponent messageComponent = new TextComponent(messageComponents);
-            TextComponent suffixComponent = new TextComponent(suffixComponents);
-            
-            net.md_5.bungee.api.chat.HoverEvent filterHover = new net.md_5.bungee.api.chat.HoverEvent(
-                net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
-                new net.md_5.bungee.api.chat.ComponentBuilder("§f" + originalMessage).create()
-            );
-            messageComponent.setHoverEvent(filterHover);
-            
-            if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
-                messageComponent = copyFunction.addClickEvent(messageComponent, filteredMessage);
-            }
-            
-            prefixComponent.addExtra(messageComponent);
-            prefixComponent.addExtra(suffixComponent);
-            return prefixComponent;
-        }
-        
-        TextComponent component;
-        
-        if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
-            if (hasHiddenText) {
-                component = MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, configManager);
-            } else {
-                component = copyFunction.createClickableMessage(formattedMessage, filteredMessage);
-            }
-        } else {
-            if (hasHiddenText) {
-                component = MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, configManager);
-            } else {
-                net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
-                component = new TextComponent(components);
-            }
-        }
-        
-        return component;
-    }
-    
-    private TextComponent createPlayerInfoMessage(String formattedMessage, String filteredMessage, String originalMessage, Player sender, Player receiver, boolean hasHiddenText, boolean wasFiltered, boolean canReadBlocked) {
-        String processedMessage = MessageProcessor.processHiddenText(filteredMessage, configManager);
-        String playerName = sender.getName();
-        
-        if (!formattedMessage.contains(playerName)) {
-            net.md_5.bungee.api.chat.BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
-            return new TextComponent(components);
-        }
-        
-        String beforePlayer = formattedMessage.substring(0, formattedMessage.indexOf(playerName));
-        String afterPlayer = formattedMessage.substring(formattedMessage.indexOf(playerName) + playerName.length());
-        
-        net.md_5.bungee.api.chat.BaseComponent[] beforeComponents = TextComponent.fromLegacyText(beforePlayer);
-        net.md_5.bungee.api.chat.BaseComponent[] playerComponents = TextComponent.fromLegacyText(playerName);
-        
-        TextComponent beforeComponent = new TextComponent(beforeComponents);
-        TextComponent playerComponent = new TextComponent(playerComponents);
-        
-        String playerInfoText = createPlayerInfoText(sender);
-        if (playerInfoText != null && !playerInfoText.isEmpty()) {
-            net.md_5.bungee.api.chat.HoverEvent playerInfoHover = new net.md_5.bungee.api.chat.HoverEvent(
-                net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
-                new net.md_5.bungee.api.chat.ComponentBuilder(playerInfoText).create()
-            );
-            playerComponent.setHoverEvent(playerInfoHover);
-        }
-        
-        if (hasHiddenText && afterPlayer.contains(processedMessage)) {
-            TextComponent hiddenComponent = MessageProcessor.createHiddenTextComponent(afterPlayer, filteredMessage, configManager);
-            
-            if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
-                hiddenComponent = copyFunction.addClickEvent(hiddenComponent, filteredMessage);
-            }
-            
-            beforeComponent.addExtra(playerComponent);
-            beforeComponent.addExtra(hiddenComponent);
-            return beforeComponent;
-        } else if (wasFiltered && canReadBlocked && afterPlayer.contains(processedMessage)) {
-            String beforeMessage = afterPlayer.substring(0, afterPlayer.indexOf(processedMessage));
-            String afterMessage = afterPlayer.substring(afterPlayer.indexOf(processedMessage) + processedMessage.length());
-            
-            net.md_5.bungee.api.chat.BaseComponent[] beforeMsgComponents = TextComponent.fromLegacyText(beforeMessage);
-            net.md_5.bungee.api.chat.BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
-            net.md_5.bungee.api.chat.BaseComponent[] afterMsgComponents = TextComponent.fromLegacyText(afterMessage);
-            
-            TextComponent beforeMsgComponent = new TextComponent(beforeMsgComponents);
-            TextComponent messageComponent = new TextComponent(messageComponents);
-            TextComponent afterMsgComponent = new TextComponent(afterMsgComponents);
-            
-            net.md_5.bungee.api.chat.HoverEvent filterHover = new net.md_5.bungee.api.chat.HoverEvent(
-                net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
-                new net.md_5.bungee.api.chat.ComponentBuilder("§f" + originalMessage).create()
-            );
-            messageComponent.setHoverEvent(filterHover);
-            
-            if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
-                beforeMsgComponent = copyFunction.addClickEvent(beforeMsgComponent, filteredMessage);
-                messageComponent = copyFunction.addClickEvent(messageComponent, filteredMessage);
-                afterMsgComponent = copyFunction.addClickEvent(afterMsgComponent, filteredMessage);
-            }
-            
-            beforeComponent.addExtra(playerComponent);
-            beforeComponent.addExtra(beforeMsgComponent);
-            beforeComponent.addExtra(messageComponent);
-            beforeComponent.addExtra(afterMsgComponent);
-            return beforeComponent;
-        } else {
-            net.md_5.bungee.api.chat.BaseComponent[] afterComponents = TextComponent.fromLegacyText(afterPlayer);
-            TextComponent afterComponent = new TextComponent(afterComponents);
-            
-            if (receiver.hasPermission(configManager.getCopyPermission()) && configManager.isCopyEnabled()) {
-                afterComponent = copyFunction.addClickEvent(afterComponent, filteredMessage);
-            }
-            
-            beforeComponent.addExtra(playerComponent);
-            beforeComponent.addExtra(afterComponent);
-            return beforeComponent;
+        this.soundManager.playMessageSound(sender);
+        this.pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
+        this.messageSynchronizer.syncGlobalMessage(sender, pingResult.getProcessedMessage());
+        String strippedMessage = ChatColor.stripColor(processedMessage);
+        this.plugin.getCompatScheduler().runAsync(() -> this.plugin.getDiscordSrvIntegration().sendGlobalChat(sender, strippedMessage));
+        if (this.hologramsManager != null && this.configManager.isHologramMessagesEnabled()) {
+            String hologramMessage = pingResult.getProcessedMessage();
+            this.plugin.getCompatScheduler().runEntity(sender, () -> this.hologramsManager.createHologram(sender, hologramMessage));
         }
     }
-    
+
+    private Component buildMessageComponent(Player sender, Player receiver, String processedMessage, String originalMessage, boolean wasFiltered, HoverEvent<Component> hiddenTextHover, String format) {
+        String formattedMessage = this.formatMessage(format, sender, processedMessage);
+        int messageIndex = formattedMessage.lastIndexOf(processedMessage);
+        if (messageIndex < 0) {
+            Component fallback = LEGACY.deserialize(formattedMessage);
+            if (this.configManager.isCopyEnabled() && receiver.hasPermission(this.configManager.getCopyPermission())) {
+                fallback = this.copyFunction.addClickEvent(fallback, originalMessage);
+            }
+            return fallback;
+        }
+
+        String prefix = formattedMessage.substring(0, messageIndex);
+        String messagePart = formattedMessage.substring(messageIndex, messageIndex + processedMessage.length());
+        String suffix = formattedMessage.substring(messageIndex + processedMessage.length());
+
+        Component prefixComponent = LEGACY.deserialize(prefix);
+        Component messageComponent = LEGACY.deserialize(messagePart);
+        Component suffixComponent = LEGACY.deserialize(suffix);
+
+        if (this.configManager.isPlayerInfoEnabled() && receiver.hasPermission(this.configManager.getPlayerInfoPermission())) {
+            String playerInfoText = this.createPlayerInfoText(sender);
+            if (playerInfoText != null && !playerInfoText.isEmpty()) {
+                prefixComponent = this.applyHoverToPlayerName(prefix, sender.getName(), HoverEvent.showText(LEGACY.deserialize(playerInfoText)));
+            }
+        }
+
+        if (wasFiltered) {
+            String filterHoverText = format.replace("{message}", originalMessage);
+            filterHoverText = this.formatMessage(filterHoverText, sender, originalMessage);
+            messageComponent = messageComponent.hoverEvent(HoverEvent.showText(LEGACY.deserialize(filterHoverText)));
+        } else if (hiddenTextHover != null) {
+            messageComponent = messageComponent.hoverEvent(hiddenTextHover);
+        }
+
+        if (this.configManager.isCopyEnabled() && receiver.hasPermission(this.configManager.getCopyPermission())) {
+            messageComponent = this.copyFunction.addClickEvent(messageComponent, originalMessage);
+        }
+
+        return Component.empty().append(prefixComponent).append(messageComponent).append(suffixComponent);
+    }
+
+    private Component applyHoverToPlayerName(String prefix, String playerName, HoverEvent<Component> hoverEvent) {
+        int index = prefix.lastIndexOf(playerName);
+        if (index < 0) {
+            return LEGACY.deserialize(prefix);
+        }
+        String before = prefix.substring(0, index);
+        String name = prefix.substring(index, index + playerName.length());
+        String after = prefix.substring(index + playerName.length());
+        return Component.empty()
+            .append(LEGACY.deserialize(before))
+            .append(LEGACY.deserialize(name).hoverEvent(hoverEvent))
+            .append(LEGACY.deserialize(after));
+    }
+
     private String createPlayerInfoText(Player player) {
-        java.util.List<String> infoLines = configManager.getPlayerInfoLines();
+        List<String> infoLines = this.configManager.getPlayerInfoLines();
         if (infoLines.isEmpty()) {
             return null;
         }
-        
         StringBuilder hoverText = new StringBuilder();
-        
         for (String line : infoLines) {
             if (hoverText.length() > 0) {
                 hoverText.append("\n");
             }
-            
             String processedLine = line;
-            
-            fc.plugins.fcchat.integration.PlaceholderAPIIntegration placeholderAPI = configManager.getPlaceholderAPI();
+            PlaceholderAPIIntegration placeholderAPI = this.configManager.getPlaceholderAPI();
             if (placeholderAPI != null && placeholderAPI.isEnabled()) {
                 try {
                     processedLine = placeholderAPI.setPlaceholders(player, processedLine);
-                } catch (Exception e) {
+                } catch (Exception | NoSuchFieldError | NoSuchMethodError ignored) {
                 }
             }
-            
             hoverText.append(processedLine);
         }
-        
-        return fc.plugins.fcchat.utils.HexUtils.translateAlternateColorCodes(hoverText.toString());
+        return HexUtils.translateAlternateColorCodes(hoverText.toString());
     }
 
-    private boolean isMessageBlocked(String message, Player sender) {
-        if (filter.isBlocked(message)) {
-            return true;
+    private String formatMessage(String format, Player player, String message) {
+        String processedMessage = this.processMessageColors(message, player);
+        String formattedMessage = format.replace("{message}", processedMessage);
+        String playerName = player.getName();
+        String coloredPlayerName = playerName;
+        if (this.configManager.isWorldColorsEnabled()) {
+            String worldName = player.getWorld().getName();
+            String worldColor = this.configManager.getWorldColor(worldName);
+            coloredPlayerName = worldColor + playerName + "&r";
         }
-        
-        if (linkBlocker.isBlocked(message)) {
-            return true;
-        }
-        
-        if (antiSpam.isSpam(sender) && !sender.hasPermission("fcchat.bypass")) {
-            return true;
-        }
-        
-        if (antiSpam.isNewPlayerBlocked(sender) && !sender.hasPermission("fcchat.bypass")) {
-            return true;
-        }
-        
-        return false;
-    }
-
-    private String formatMessage(String format, Player player, String message, boolean usePlaceholders) {
-        String formattedMessage = format
-                .replace("{player}", player.getName())
-                .replace("{message}", processMessageColors(message, player));
-
-        LuckPermsIntegration luckPerms = configManager.getLuckPermsIntegration();
+        formattedMessage = formattedMessage.replace("{player}", coloredPlayerName);
+        formattedMessage = formattedMessage.replace("{player_name}", coloredPlayerName);
+        LuckPermsIntegration luckPerms = this.configManager.getLuckPermsIntegration();
         if (luckPerms.isEnabled()) {
             String prefix = luckPerms.getPrefix(player, "");
             String suffix = luckPerms.getSuffix(player, "");
-            formattedMessage = formattedMessage
-                    .replace("%prefix%", prefix)
-                    .replace("%suffix%", suffix)
-                    .replace("%luckperms_prefix%", prefix)
-                    .replace("%luckperms_suffix%", suffix);
+            formattedMessage = formattedMessage.replace("%prefix%", prefix).replace("%suffix%", suffix).replace("%luckperms_prefix%", prefix).replace("%luckperms_suffix%", suffix);
         } else {
-            formattedMessage = formattedMessage
-                    .replace("%prefix%", "")
-                    .replace("%suffix%", "")
-                    .replace("%luckperms_prefix%", "")
-                    .replace("%luckperms_suffix%", "");
+            formattedMessage = formattedMessage.replace("%prefix%", "").replace("%suffix%", "").replace("%luckperms_prefix%", "").replace("%luckperms_suffix%", "");
         }
-
-        PlaceholderAPIIntegration placeholderAPI = configManager.getPlaceholderAPI();
-        if (placeholderAPI.isEnabled()) {
-            formattedMessage = placeholderAPI.setPlaceholders(player, formattedMessage);
+        PlaceholderAPIIntegration placeholderAPI = this.configManager.getPlaceholderAPI();
+        if (placeholderAPI != null && placeholderAPI.isEnabled()) {
+            try {
+                formattedMessage = placeholderAPI.setPlaceholders(player, formattedMessage);
+            } catch (Exception | NoSuchFieldError | NoSuchMethodError ignored) {
+            }
         }
-
+        if (this.plugin.getApi() != null) {
+            formattedMessage = this.plugin.getApi().applyContextPlaceholders(player, null, formattedMessage, message);
+        }
         return HexUtils.translateAlternateColorCodes(formattedMessage);
     }
 
     private String processMessageColors(String message, Player player) {
-        if (!configManager.isColorChatEnabled()) {
+        if (!this.configManager.isColorChatEnabled()) {
             return ChatColor.stripColor(HexUtils.translateAlternateColorCodes(message));
         }
-
-        if (!player.hasPermission(configManager.getColorChatPermission())) {
+        if (!player.hasPermission(this.configManager.getColorChatPermission())) {
             return ChatColor.stripColor(HexUtils.translateAlternateColorCodes(message));
         }
-
         return HexUtils.translateAlternateColorCodes(message);
     }
-} 
+}

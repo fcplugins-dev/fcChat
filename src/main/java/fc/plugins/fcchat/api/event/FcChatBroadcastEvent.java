@@ -1,16 +1,18 @@
+
 package fc.plugins.fcchat.api.event;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-public class FcChatBroadcastEvent extends Event implements Cancellable {
+public class FcChatBroadcastEvent
+extends Event
+implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private final CommandSender sender;
     private final String message;
@@ -23,19 +25,19 @@ public class FcChatBroadcastEvent extends Event implements Cancellable {
         this.sender = sender;
         this.message = message;
         this.formattedMessage = formattedMessage;
-        this.recipients = new HashSet<>(recipients);
+        this.recipients = new HashSet<Player>(recipients);
     }
 
     public CommandSender getSender() {
-        return sender;
+        return this.sender;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public String getFormattedMessage() {
-        return formattedMessage;
+        return this.formattedMessage;
     }
 
     public void setFormattedMessage(String formattedMessage) {
@@ -43,24 +45,21 @@ public class FcChatBroadcastEvent extends Event implements Cancellable {
     }
 
     public Set<Player> getRecipients() {
-        return Collections.unmodifiableSet(recipients);
+        return Collections.unmodifiableSet(this.recipients);
     }
 
     public void setRecipients(Set<Player> recipients) {
-        this.recipients = new HashSet<>(recipients);
+        this.recipients = new HashSet<Player>(recipients);
     }
 
-    @Override
     public boolean isCancelled() {
-        return cancelled;
+        return this.cancelled;
     }
 
-    @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
     }
 
-    @Override
     public HandlerList getHandlers() {
         return HANDLERS;
     }
@@ -69,3 +68,4 @@ public class FcChatBroadcastEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 }
+

@@ -1,7 +1,8 @@
+
 package fc.plugins.fcchat.chat.listeners;
 
-import fc.plugins.fcchat.manager.config.ConfigManager;
 import fc.plugins.fcchat.integration.PlaceholderAPIIntegration;
+import fc.plugins.fcchat.manager.config.ConfigManager;
 import fc.plugins.fcchat.utils.HexUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -14,7 +15,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class JoinLeaveListener
-        implements Listener {
+implements Listener {
     private final ConfigManager configManager;
 
     public JoinLeaveListener(ConfigManager configManager) {
@@ -33,7 +34,9 @@ public class JoinLeaveListener
                 if (placeholderAPI != null && placeholderAPI.isEnabled()) {
                     try {
                         message = placeholderAPI.setPlaceholders(player, message);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception exception) {
+                        // empty catch block
                     }
                 }
                 message = HexUtils.translateAlternateColorCodes(message);
@@ -41,13 +44,11 @@ public class JoinLeaveListener
                 String soundName = this.configManager.getJoinSound();
                 if (soundName != null && !soundName.equalsIgnoreCase("null")) {
                     try {
+                        Sound sound;
                         NamespacedKey soundKey = NamespacedKey.fromString(soundName.toLowerCase());
-                        if (soundKey != null) {
-                            Sound sound = Registry.SOUNDS.get(soundKey);
-                            if (sound != null) {
-                                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                                    onlinePlayer.playSound(onlinePlayer.getLocation(), sound, 1.0f, 1.0f);
-                                }
+                        if (soundKey != null && (sound = (Sound)Registry.SOUNDS.get(soundKey)) != null) {
+                            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                onlinePlayer.playSound(onlinePlayer.getLocation(), sound, 1.0f, 1.0f);
                             }
                         }
                     }
@@ -71,7 +72,9 @@ public class JoinLeaveListener
                 if (placeholderAPI != null && placeholderAPI.isEnabled()) {
                     try {
                         message = placeholderAPI.setPlaceholders(player, message);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception exception) {
+                        // empty catch block
                     }
                 }
                 message = HexUtils.translateAlternateColorCodes(message);
@@ -79,14 +82,12 @@ public class JoinLeaveListener
                 String soundName = this.configManager.getLeaveSound();
                 if (soundName != null && !soundName.equalsIgnoreCase("null")) {
                     try {
+                        Sound sound;
                         NamespacedKey soundKey = NamespacedKey.fromString(soundName.toLowerCase());
-                        if (soundKey != null) {
-                            Sound sound = Registry.SOUNDS.get(soundKey);
-                            if (sound != null) {
-                                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                                    if (onlinePlayer.equals(player)) continue;
-                                    onlinePlayer.playSound(onlinePlayer.getLocation(), sound, 1.0f, 1.0f);
-                                }
+                        if (soundKey != null && (sound = (Sound)Registry.SOUNDS.get(soundKey)) != null) {
+                            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                if (onlinePlayer.equals(player)) continue;
+                                onlinePlayer.playSound(onlinePlayer.getLocation(), sound, 1.0f, 1.0f);
                             }
                         }
                     }
@@ -98,3 +99,4 @@ public class JoinLeaveListener
         }
     }
 }
+

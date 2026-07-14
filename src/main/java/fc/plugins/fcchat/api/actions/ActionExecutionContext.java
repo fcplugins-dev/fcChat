@@ -1,10 +1,10 @@
-package fc.plugins.fcchat.api.actions;
 
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+package fc.plugins.fcchat.api.actions;
 
 import java.util.Collections;
 import java.util.Map;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class ActionExecutionContext {
     private final CommandSender sender;
@@ -20,18 +20,19 @@ public class ActionExecutionContext {
     }
 
     public CommandSender getSender() {
-        return sender;
+        return this.sender;
     }
 
     public Player getTarget() {
-        return target;
+        return this.target;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public Map<String, String> getMetadata() {
-        return metadata;
+        return this.metadata;
     }
 }
+

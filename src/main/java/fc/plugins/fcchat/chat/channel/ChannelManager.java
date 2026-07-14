@@ -1,31 +1,33 @@
+
 package fc.plugins.fcchat.chat.channel;
 
 import fc.plugins.fcchat.FcChat;
 import fc.plugins.fcchat.chat.MessageProcessor;
 import fc.plugins.fcchat.chat.PingManager;
 import fc.plugins.fcchat.chat.SoundManager;
-import fc.plugins.fcchat.manager.config.ConfigManager;
-import fc.plugins.fcchat.utils.data.PlayerTimeManager;
-import fc.plugins.fcchat.utils.function.Copy;
+import fc.plugins.fcchat.chat.channel.Channel;
 import fc.plugins.fcchat.integration.LuckPermsIntegration;
 import fc.plugins.fcchat.integration.PlaceholderAPIIntegration;
+import fc.plugins.fcchat.manager.config.ConfigManager;
 import fc.plugins.fcchat.moderation.AiModerator;
 import fc.plugins.fcchat.moderation.AntiSpam;
 import fc.plugins.fcchat.moderation.Filter;
 import fc.plugins.fcchat.moderation.LinkBlocker;
 import fc.plugins.fcchat.utils.HexUtils;
+import fc.plugins.fcchat.utils.data.PlayerTimeManager;
+import fc.plugins.fcchat.utils.function.Copy;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -45,6 +47,7 @@ public class ChannelManager {
     private FileConfiguration channelConfig;
     private final SoundManager soundManager;
     private final PingManager pingManager;
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.builder().character('\u00A7').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
     public ChannelManager(FcChat plugin, ConfigManager configManager, PlayerTimeManager playerTimeManager) {
         this.plugin = plugin;
@@ -84,6 +87,7 @@ public class ChannelManager {
             this.channelConfig.save(this.channelFile);
         }
         catch (IOException iOException) {
+            // empty catch block
         }
     }
 
@@ -134,7 +138,8 @@ public class ChannelManager {
             String clanName;
             try {
                 clanName = placeholderAPI.setPlaceholders(player, channel.getPlaceholder());
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 clanName = channel.getPlaceholderNoClan();
             }
             return !clanName.equals(channel.getPlaceholderNoClan());
@@ -153,14 +158,15 @@ public class ChannelManager {
             return channel.getPlaceholderNoClan();
         }
         try {
-            try {
-                return placeholderAPI.setPlaceholders(player, channel.getPlaceholder());
-            } catch (Exception e) {
-                return channel.getPlaceholderNoClan();
-            }
+            return placeholderAPI.setPlaceholders(player, channel.getPlaceholder());
         }
         catch (Exception e) {
-            return channel.getPlaceholderNoClan();
+            try {
+                return channel.getPlaceholderNoClan();
+            }
+            catch (Exception e2) {
+                return channel.getPlaceholderNoClan();
+            }
         }
     }
 
@@ -205,12 +211,10 @@ public class ChannelManager {
         String filteredMessage = this.filter.filterMessage(message, sender);
         PingManager.PingResult pingResult = this.pingManager.processPings(filteredMessage, sender);
         String formattedMessage = this.formatChannelMessage(channel, sender, pingResult.getProcessedMessage());
-
         boolean aiActive = this.aiModerator.isActiveFor(sender);
         if (aiActive) {
-            TextComponent senderPreview = this.createChannelMessageComponent(formattedMessage, message, pingResult.getProcessedMessage(), sender, sender);
-            sender.spigot().sendMessage(senderPreview);
-
+            Component senderPreview = this.createChannelMessageComponent(formattedMessage, message, pingResult.getProcessedMessage(), sender, sender);
+            sender.sendMessage(senderPreview);
             AiModerator.Decision decision = this.aiModerator.moderate(sender, message);
             if (decision.isBlocked()) {
                 this.aiModerator.registerBlocked(sender, decision.getReason());
@@ -218,7 +222,6 @@ public class ChannelManager {
                 return;
             }
         }
-
         this.sendChannelMessage(sender, message, pingResult.getProcessedMessage(), formattedMessage, channel, aiActive);
         this.soundManager.playMessageSound(sender);
         this.pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
@@ -226,9 +229,8 @@ public class ChannelManager {
 
     public Channel getChannelBySymbol(String symbol) {
         for (Channel channel : this.channels.values()) {
-            if (channel.hasSymbol() && channel.getSymbol().equals(symbol)) {
-                return channel;
-            }
+            if (!channel.hasSymbol() || !channel.getSymbol().equals(symbol)) continue;
+            return channel;
         }
         return null;
     }
@@ -280,12 +282,10 @@ public class ChannelManager {
         String filteredMessage = this.filter.filterMessage(channelMessage, sender);
         PingManager.PingResult pingResult = this.pingManager.processPings(filteredMessage, sender);
         String formattedMessage = this.formatChannelMessage(channel, sender, pingResult.getProcessedMessage());
-
         boolean aiActive = this.aiModerator.isActiveFor(sender);
         if (aiActive) {
-            TextComponent senderPreview = this.createChannelMessageComponent(formattedMessage, channelMessage, pingResult.getProcessedMessage(), sender, sender);
-            sender.spigot().sendMessage(senderPreview);
-
+            Component senderPreview = this.createChannelMessageComponent(formattedMessage, channelMessage, pingResult.getProcessedMessage(), sender, sender);
+            sender.sendMessage(senderPreview);
             AiModerator.Decision decision = this.aiModerator.moderate(sender, channelMessage);
             if (decision.isBlocked()) {
                 this.aiModerator.registerBlocked(sender, decision.getReason());
@@ -293,7 +293,6 @@ public class ChannelManager {
                 return;
             }
         }
-
         this.sendChannelMessage(sender, channelMessage, pingResult.getProcessedMessage(), formattedMessage, channel, aiActive);
         this.soundManager.playMessageSound(sender);
         this.pingManager.playPingSounds(pingResult.getPingedPlayers(), pingResult.hasEveryonePing());
@@ -304,10 +303,9 @@ public class ChannelManager {
             this.sendClanChannelMessage(sender, originalMessage, filteredMessage, formattedMessage, channel, excludeSender);
         } else {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (excludeSender && player.equals(sender)) continue;
-                if (!this.hasChannelPermission(player, channel.getId())) continue;
-                TextComponent finalComponent = this.createChannelMessageComponent(formattedMessage, originalMessage, filteredMessage, sender, player);
-                player.spigot().sendMessage(finalComponent);
+                if (excludeSender && player.equals(sender) || !this.hasChannelPermission(player, channel.getId())) continue;
+                Component finalComponent = this.createChannelMessageComponent(formattedMessage, originalMessage, filteredMessage, sender, player);
+                player.sendMessage(finalComponent);
             }
         }
     }
@@ -318,70 +316,72 @@ public class ChannelManager {
             return;
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (excludeSender && player.equals(sender)) continue;
-            String playerClanName = this.getPlayerClanName(player, channel);
-            if (!playerClanName.equals(senderClanName) || playerClanName.equals(channel.getPlaceholderNoClan())) continue;
-            TextComponent finalComponent = this.createChannelMessageComponent(formattedMessage, originalMessage, filteredMessage, sender, player);
-            player.spigot().sendMessage(finalComponent);
+            String playerClanName;
+            if (excludeSender && player.equals(sender) || !(playerClanName = this.getPlayerClanName(player, channel)).equals(senderClanName) || playerClanName.equals(channel.getPlaceholderNoClan())) continue;
+            Component finalComponent = this.createChannelMessageComponent(formattedMessage, originalMessage, filteredMessage, sender, player);
+            player.sendMessage(finalComponent);
         }
     }
 
-    private TextComponent createChannelMessageComponent(String formattedMessage, String originalMessage, String filteredMessage, Player sender, Player receiver) {
-        TextComponent component;
-        boolean canSeePlayerInfo;
+    private Component createChannelMessageComponent(String formattedMessage, String originalMessage, String filteredMessage, Player sender, Player receiver) {
         String processedMessage = MessageProcessor.processHiddenText(filteredMessage, this.configManager);
-        String finalFormattedMessage = formattedMessage;
-        boolean hasHiddenText = filteredMessage.contains("||") && sender.hasPermission(this.configManager.getHiddenTextPermission());
-        boolean wasFiltered = !originalMessage.equals(filteredMessage);
-        boolean canReadBlocked = receiver.hasPermission("fcchat.read");
-        boolean bl = canSeePlayerInfo = receiver.hasPermission(this.configManager.getPlayerInfoPermission()) && this.configManager.isPlayerInfoEnabled();
-        if (canSeePlayerInfo) {
-            return this.createPlayerInfoMessage(formattedMessage, originalMessage, filteredMessage, processedMessage, sender, receiver, hasHiddenText, wasFiltered, canReadBlocked);
-        }
-        if (hasHiddenText && finalFormattedMessage.contains(processedMessage)) {
-            return MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, this.configManager);
-        }
-        if (wasFiltered && canReadBlocked && finalFormattedMessage.contains(processedMessage)) {
-            String prefix = finalFormattedMessage.substring(0, finalFormattedMessage.lastIndexOf(processedMessage));
-            String suffix = finalFormattedMessage.substring(finalFormattedMessage.lastIndexOf(processedMessage) + processedMessage.length());
-            BaseComponent[] prefixComponents = TextComponent.fromLegacyText(prefix);
-            BaseComponent[] messageComponents = TextComponent.fromLegacyText(processedMessage);
-            BaseComponent[] suffixComponents = TextComponent.fromLegacyText(suffix);
-            TextComponent prefixComponent = new TextComponent(prefixComponents);
-            TextComponent messageComponent = new TextComponent(messageComponents);
-            TextComponent suffixComponent = new TextComponent(suffixComponents);
-            HoverEvent filterHover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§f" + originalMessage).create());
-            messageComponent.setHoverEvent(filterHover);
-            if (receiver.hasPermission(this.configManager.getCopyPermission()) && this.configManager.isCopyEnabled()) {
-                messageComponent = this.copyFunction.addClickEvent(messageComponent, originalMessage);
+        int messageIndex = formattedMessage.lastIndexOf(processedMessage);
+        if (messageIndex < 0) {
+            Component fallback = LEGACY.deserialize(formattedMessage);
+            if (this.configManager.isCopyEnabled() && receiver.hasPermission(this.configManager.getCopyPermission())) {
+                fallback = this.copyFunction.addClickEvent(fallback, originalMessage);
             }
-            prefixComponent.addExtra(messageComponent);
-            prefixComponent.addExtra(suffixComponent);
-            return prefixComponent;
+            return fallback;
         }
-        if (receiver.hasPermission(this.configManager.getCopyPermission()) && this.configManager.isCopyEnabled()) {
-            component = hasHiddenText ? MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, this.configManager) : this.copyFunction.createClickableMessage(formattedMessage, originalMessage);
+
+        String prefix = formattedMessage.substring(0, messageIndex);
+        String messagePart = formattedMessage.substring(messageIndex, messageIndex + processedMessage.length());
+        String suffix = formattedMessage.substring(messageIndex + processedMessage.length());
+
+        Component prefixComponent = LEGACY.deserialize(prefix);
+        Component messageComponent = LEGACY.deserialize(messagePart);
+        Component suffixComponent = LEGACY.deserialize(suffix);
+
+        if (this.configManager.isPlayerInfoEnabled() && receiver.hasPermission(this.configManager.getPlayerInfoPermission())) {
+            String playerInfoText = this.createPlayerInfoText(sender);
+            if (playerInfoText != null && !playerInfoText.isEmpty()) {
+                prefixComponent = this.applyHoverToPlayerName(prefix, sender.getName(), HoverEvent.showText(LEGACY.deserialize(playerInfoText)));
+            }
+        }
+
+        boolean wasFiltered = !originalMessage.equals(filteredMessage);
+        boolean hasHiddenText = filteredMessage.contains("||") && sender.hasPermission(this.configManager.getHiddenTextPermission());
+        boolean canReadBlocked = receiver.hasPermission("fcchat.read");
+
+        if (wasFiltered && canReadBlocked) {
+            messageComponent = messageComponent.hoverEvent(HoverEvent.showText(LEGACY.deserialize("\u00a7f" + originalMessage)));
         } else if (hasHiddenText) {
-            component = MessageProcessor.createHiddenTextComponent(formattedMessage, filteredMessage, this.configManager);
-        } else {
-            BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
-            component = new TextComponent(components);
+            HoverEvent<Component> hiddenTextHover = MessageProcessor.createHiddenTextHover(filteredMessage, this.configManager);
+            if (hiddenTextHover != null) {
+                messageComponent = messageComponent.hoverEvent(hiddenTextHover);
+            }
         }
-        return component;
+
+        if (this.configManager.isCopyEnabled() && receiver.hasPermission(this.configManager.getCopyPermission())) {
+            messageComponent = this.copyFunction.addClickEvent(messageComponent, originalMessage);
+        }
+
+        return Component.empty().append(prefixComponent).append(messageComponent).append(suffixComponent);
     }
 
-    private TextComponent createPlayerInfoMessage(String formattedMessage, String originalMessage, String filteredMessage, String processedMessage, Player sender, Player receiver, boolean hasHiddenText, boolean wasFiltered, boolean canReadBlocked) {
-        BaseComponent[] components = TextComponent.fromLegacyText(formattedMessage);
-        TextComponent result = new TextComponent(components);
-        
-        String playerInfoText = this.createPlayerInfoText(sender);
-        if (playerInfoText != null && !playerInfoText.isEmpty()) {
-            this.addPlayerInfoHover(result, sender.getName(), playerInfoText);
+    private Component applyHoverToPlayerName(String prefix, String playerName, HoverEvent<Component> hoverEvent) {
+        int index = prefix.lastIndexOf(playerName);
+        if (index < 0) {
+            return LEGACY.deserialize(prefix);
         }
-        
-        return result;
+        String before = prefix.substring(0, index);
+        String name = prefix.substring(index, index + playerName.length());
+        String after = prefix.substring(index + playerName.length());
+        return Component.empty()
+            .append(LEGACY.deserialize(before))
+            .append(LEGACY.deserialize(name).hoverEvent(hoverEvent))
+            .append(LEGACY.deserialize(after));
     }
-
     private String createPlayerInfoText(Player player) {
         List<String> infoLines = this.configManager.getPlayerInfoLines();
         if (infoLines.isEmpty()) {
@@ -397,7 +397,9 @@ public class ChannelManager {
             if (placeholderAPI != null && placeholderAPI.isEnabled()) {
                 try {
                     processedLine = placeholderAPI.setPlaceholders(player, processedLine);
-                } catch (Exception exception) {
+                }
+                catch (Exception exception) {
+                    // empty catch block
                 }
             }
             hoverText.append(processedLine);
@@ -407,20 +409,15 @@ public class ChannelManager {
 
     private String formatChannelMessage(Channel channel, Player player, String message) {
         String processedMessage = this.processMessageColors(message, player);
-        
         String formattedMessage = channel.getFormat().replace("{message}", processedMessage).replace("{channel}", channel.getName());
-        
         String playerName = player.getName();
-        String coloredPlayerName = playerName;
-        
+        Object coloredPlayerName = playerName;
         if (this.configManager.isWorldColorsEnabled()) {
             String worldName = player.getWorld().getName();
             String worldColor = this.configManager.getWorldColor(worldName);
             coloredPlayerName = worldColor + playerName + "&r";
         }
-        
-        formattedMessage = formattedMessage.replace("{player}", coloredPlayerName);
-        
+        formattedMessage = formattedMessage.replace("{player}", (CharSequence)coloredPlayerName);
         LuckPermsIntegration luckPerms = this.configManager.getLuckPermsIntegration();
         if (luckPerms.isEnabled()) {
             String prefix = luckPerms.getPrefix(player, "");
@@ -429,21 +426,19 @@ public class ChannelManager {
         } else {
             formattedMessage = formattedMessage.replace("%prefix%", "").replace("%suffix%", "").replace("%luckperms_prefix%", "").replace("%luckperms_suffix%", "");
         }
-        
         PlaceholderAPIIntegration placeholderAPI = this.configManager.getPlaceholderAPI();
         if (placeholderAPI != null && placeholderAPI.isEnabled()) {
             try {
                 formattedMessage = placeholderAPI.setPlaceholders(player, formattedMessage);
-            } catch (Exception e) {
+            }
+            catch (Exception exception) {
+                // empty catch block
             }
         }
-
         if (this.plugin.getApi() != null) {
             formattedMessage = this.plugin.getApi().applyContextPlaceholders(player, null, formattedMessage, message);
         }
-        
         formattedMessage = HexUtils.translateAlternateColorCodes(formattedMessage);
-        
         return formattedMessage;
     }
 
@@ -457,17 +452,4 @@ public class ChannelManager {
         return HexUtils.translateAlternateColorCodes(message);
     }
 
-    private void addPlayerInfoHover(TextComponent component, String playerName, String playerInfoText) {
-        if (component.getText() != null && component.getText().contains(playerName)) {
-            HoverEvent playerInfoHover = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(playerInfoText).create());
-            component.setHoverEvent(playerInfoHover);
-        }
-        if (component.getExtra() != null) {
-            for (BaseComponent extra : component.getExtra()) {
-                if (extra instanceof TextComponent) {
-                    this.addPlayerInfoHover((TextComponent) extra, playerName, playerInfoText);
-                }
-            }
-        }
-    }
 }

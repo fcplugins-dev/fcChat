@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.api.event;
 
 import org.bukkit.entity.Player;
@@ -5,7 +6,9 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class FcChatPrivateMessageEvent extends Event implements Cancellable {
+public class FcChatPrivateMessageEvent
+extends Event
+implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private final Player sender;
     private final Player receiver;
@@ -24,19 +27,19 @@ public class FcChatPrivateMessageEvent extends Event implements Cancellable {
     }
 
     public Player getSender() {
-        return sender;
+        return this.sender;
     }
 
     public Player getReceiver() {
-        return receiver;
+        return this.receiver;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public String getSenderFormat() {
-        return senderFormat;
+        return this.senderFormat;
     }
 
     public void setSenderFormat(String senderFormat) {
@@ -44,24 +47,21 @@ public class FcChatPrivateMessageEvent extends Event implements Cancellable {
     }
 
     public String getReceiverFormat() {
-        return receiverFormat;
+        return this.receiverFormat;
     }
 
     public void setReceiverFormat(String receiverFormat) {
         this.receiverFormat = receiverFormat;
     }
 
-    @Override
     public boolean isCancelled() {
-        return cancelled;
+        return this.cancelled;
     }
 
-    @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
     }
 
-    @Override
     public HandlerList getHandlers() {
         return HANDLERS;
     }
@@ -70,3 +70,4 @@ public class FcChatPrivateMessageEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 }
+

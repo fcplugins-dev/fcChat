@@ -1,19 +1,18 @@
+
 package fc.plugins.fcchat.chat;
 
-import fc.plugins.fcchat.config.ConfigManager;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-
+import fc.plugins.fcchat.chat.SoundManager;
+import fc.plugins.fcchat.manager.config.ConfigManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 public class PingManager {
     private final ConfigManager configManager;
     private final SoundManager soundManager;
-    private static final Pattern PING_PATTERN = Pattern.compile("@(\\w+)");
-    private static final Pattern EVERYONE_PATTERN = Pattern.compile("@everyone", Pattern.CASE_INSENSITIVE);
 
     public PingManager(ConfigManager configManager, SoundManager soundManager) {
         this.configManager = configManager;
@@ -21,52 +20,51 @@ public class PingManager {
     }
 
     public PingResult processPings(String message, Player sender) {
-        if (!configManager.isPingSystemEnabled()) {
-            return new PingResult(message, new ArrayList<>(), false);
+        if (!this.configManager.isPingSystemEnabled()) {
+            return new PingResult(message, new ArrayList<Player>(), false);
         }
-
-        List<Player> pingedPlayers = new ArrayList<>();
+        ArrayList<Player> pingedPlayers = new ArrayList<Player>();
         boolean hasEveryonePing = false;
         String processedMessage = message;
-
-        if (!sender.hasPermission(configManager.getPingPermission())) {
+        if (!sender.hasPermission(this.configManager.getPingPermission())) {
             return new PingResult(processedMessage, pingedPlayers, hasEveryonePing);
         }
-
-        Matcher everyoneMatcher = EVERYONE_PATTERN.matcher(processedMessage);
-        if (everyoneMatcher.find()) {
+        String symbol = this.configManager.getPingSymbol();
+        String escapedSymbol = Pattern.quote(symbol);
+        Pattern everyonePattern = Pattern.compile(escapedSymbol + "everyone", 2);
+        Pattern pingPattern = Pattern.compile(escapedSymbol + "(\\w+)");
+        Matcher everyoneMatcher = everyonePattern.matcher(processedMessage);
+        if (everyoneMatcher.find() && sender.hasPermission(this.configManager.getEveryonePingPermission())) {
             hasEveryonePing = true;
-            if (sender.hasPermission(configManager.getEveryonePingPermission())) {
-                pingedPlayers.addAll(Bukkit.getOnlinePlayers());
-                processedMessage = everyoneMatcher.replaceAll(configManager.getEveryonePingColor() + "@everyone");
+            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                if (onlinePlayer.equals(sender)) continue;
+                pingedPlayers.add(onlinePlayer);
             }
+            processedMessage = everyoneMatcher.replaceAll(this.configManager.getEveryonePingColor() + symbol + "everyone");
         }
-
-        Matcher pingMatcher = PING_PATTERN.matcher(processedMessage);
+        Matcher pingMatcher = pingPattern.matcher(processedMessage);
         while (pingMatcher.find()) {
+            Player targetPlayer;
             String playerName = pingMatcher.group(1);
-            Player targetPlayer = Bukkit.getPlayer(playerName);
-            
-            if (targetPlayer != null && targetPlayer.isOnline()) {
+            if (playerName.equalsIgnoreCase("everyone") || (targetPlayer = Bukkit.getPlayer(playerName)) == null || !targetPlayer.isOnline() || targetPlayer.equals(sender)) continue;
+            if (!pingedPlayers.contains(targetPlayer)) {
                 pingedPlayers.add(targetPlayer);
-                String pingColor = configManager.getPingColor();
-                processedMessage = processedMessage.replaceFirst("@" + playerName, pingColor + "@" + playerName);
             }
+            String pingColor = this.configManager.getPingColor();
+            processedMessage = processedMessage.replaceFirst(escapedSymbol + Pattern.quote(playerName), pingColor + symbol + playerName);
         }
-
         return new PingResult(processedMessage, pingedPlayers, hasEveryonePing);
     }
 
     public void playPingSounds(List<Player> pingedPlayers, boolean hasEveryonePing) {
-        if (!configManager.isPingSystemEnabled()) {
+        if (!this.configManager.isPingSystemEnabled()) {
             return;
         }
-
         for (Player player : pingedPlayers) {
-            if (hasEveryonePing && player.hasPermission(configManager.getEveryonePingPermission())) {
-                soundManager.playEveryonePingSound(player);
+            if (hasEveryonePing) {
+                this.soundManager.playEveryonePingSound(player);
             } else {
-                soundManager.playPingSound(player);
+                this.soundManager.playPingSound(player);
             }
         }
     }
@@ -83,15 +81,16 @@ public class PingManager {
         }
 
         public String getProcessedMessage() {
-            return processedMessage;
+            return this.processedMessage;
         }
 
         public List<Player> getPingedPlayers() {
-            return pingedPlayers;
+            return this.pingedPlayers;
         }
 
         public boolean hasEveryonePing() {
-            return hasEveryonePing;
+            return this.hasEveryonePing;
         }
     }
 }
+

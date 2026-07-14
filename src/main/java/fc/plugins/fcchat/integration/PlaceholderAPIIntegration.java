@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.integration;
 
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -7,26 +8,33 @@ public class PlaceholderAPIIntegration {
     private boolean isEnabled = false;
 
     public PlaceholderAPIIntegration() {
-        setupPlaceholderAPI();
+        this.setupPlaceholderAPI();
     }
 
     private void setupPlaceholderAPI() {
         try {
             Class.forName("me.clip.placeholderapi.PlaceholderAPI");
-            isEnabled = true;
-        } catch (ClassNotFoundException e) {
-            isEnabled = false;
+            this.isEnabled = true;
+        }
+        catch (ClassNotFoundException e) {
+            this.isEnabled = false;
         }
     }
 
     public boolean isEnabled() {
-        return isEnabled;
+        return this.isEnabled;
     }
 
     public String setPlaceholders(Player player, String text) {
-        if (!isEnabled) {
+        if (!this.isEnabled) {
             return text;
         }
-        return PlaceholderAPI.setPlaceholders(player, text);
+        try {
+            return PlaceholderAPI.setPlaceholders((Player)player, text);
+        }
+        catch (Exception | NoSuchFieldError | NoSuchMethodError e) {
+            return text;
+        }
     }
-} 
+}
+

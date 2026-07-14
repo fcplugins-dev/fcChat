@@ -1,26 +1,22 @@
+
 package fc.plugins.fcchat.chat;
 
-import fc.plugins.fcchat.config.ConfigManager;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-
+import fc.plugins.fcchat.manager.config.ConfigManager;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
 
 public class MessageProcessor {
     private static final Pattern HIDDEN_TEXT_PATTERN = Pattern.compile("\\|\\|([^|]+)\\|\\|");
-    
+
     public static String processHiddenText(String message, ConfigManager configManager) {
         if (!configManager.isHiddenTextEnabled()) {
             return message;
         }
-        
         Matcher matcher = HIDDEN_TEXT_PATTERN.matcher(message);
         StringBuffer result = new StringBuffer();
-        
         while (matcher.find()) {
             String hiddenText = matcher.group(1);
             String symbol = configManager.getHiddenTextSymbol();
@@ -29,25 +25,20 @@ public class MessageProcessor {
             matcher.appendReplacement(result, replacement);
         }
         matcher.appendTail(result);
-        
         return result.toString();
     }
-    
-    public static TextComponent createHiddenTextComponent(String formattedMessage, String originalMessage, ConfigManager configManager) {
+
+    public static Component createHiddenTextComponent(String formattedMessage, String originalMessage, ConfigManager configManager) {
         if (!configManager.isHiddenTextEnabled()) {
-            return new TextComponent(formattedMessage);
+            return Component.text(formattedMessage);
         }
-        
         Matcher matcher = HIDDEN_TEXT_PATTERN.matcher(originalMessage);
-        List<String> hiddenTexts = new ArrayList<>();
-        
+        ArrayList<String> hiddenTexts = new ArrayList<String>();
         while (matcher.find()) {
             String hiddenText = matcher.group(1);
             hiddenTexts.add(hiddenText);
         }
-        
-        TextComponent component = new TextComponent(formattedMessage);
-        
+        Component component = Component.text(formattedMessage);
         if (!hiddenTexts.isEmpty()) {
             StringBuilder hoverText = new StringBuilder();
             for (String hiddenText : hiddenTexts) {
@@ -56,30 +47,21 @@ public class MessageProcessor {
                 }
                 hoverText.append(hiddenText);
             }
-            
-            HoverEvent hoverEvent = new HoverEvent(
-                HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder(hoverText.toString()).create()
-            );
-            component.setHoverEvent(hoverEvent);
+            component = component.hoverEvent(HoverEvent.showText(Component.text(hoverText.toString())));
         }
-        
         return component;
     }
-    
-    public static HoverEvent createHiddenTextHover(String originalMessage, ConfigManager configManager) {
+
+    public static HoverEvent<Component> createHiddenTextHover(String originalMessage, ConfigManager configManager) {
         if (!configManager.isHiddenTextEnabled()) {
             return null;
         }
-        
         Matcher matcher = HIDDEN_TEXT_PATTERN.matcher(originalMessage);
-        List<String> hiddenTexts = new ArrayList<>();
-        
+        ArrayList<String> hiddenTexts = new ArrayList<String>();
         while (matcher.find()) {
             String hiddenText = matcher.group(1);
             hiddenTexts.add(hiddenText);
         }
-        
         if (!hiddenTexts.isEmpty()) {
             StringBuilder hoverText = new StringBuilder();
             for (String hiddenText : hiddenTexts) {
@@ -88,13 +70,8 @@ public class MessageProcessor {
                 }
                 hoverText.append(hiddenText);
             }
-            
-            return new HoverEvent(
-                HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder(hoverText.toString()).create()
-            );
+            return HoverEvent.showText(Component.text(hoverText.toString()));
         }
-        
         return null;
     }
-} 
+}

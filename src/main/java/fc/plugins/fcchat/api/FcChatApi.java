@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.api;
 
 import fc.plugins.fcchat.api.actions.ActionExecutionContext;
@@ -5,45 +6,45 @@ import fc.plugins.fcchat.api.actions.ActionHandler;
 import fc.plugins.fcchat.api.audience.AudienceResolver;
 import fc.plugins.fcchat.api.placeholder.ContextPlaceholderProvider;
 import fc.plugins.fcchat.chat.channel.Channel;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public interface FcChatApi {
-    boolean sendBroadcast(CommandSender sender, String message);
+    public boolean sendBroadcast(CommandSender var1, String var2);
 
-    boolean sendPrivateMessage(Player sender, Player receiver, String message);
+    public boolean sendPrivateMessage(Player var1, Player var2, String var3);
 
-    boolean sendReplyMessage(Player sender, Player receiver, String message);
+    public boolean sendReplyMessage(Player var1, Player var2, String var3);
 
-    void clearChat(CommandSender sender, boolean announce);
+    public void clearChat(CommandSender var1, boolean var2);
 
-    boolean switchChannel(Player player, String channelId);
+    public boolean switchChannel(Player var1, String var2);
 
-    String getPlayerChannel(UUID playerId);
+    public String getPlayerChannel(UUID var1);
 
-    Map<String, Channel> getChannels();
+    public Map<String, Channel> getChannels();
 
-    boolean isCommandEnabled(String command);
+    public boolean isCommandEnabled(String var1);
 
-    void registerContextPlaceholder(String key, ContextPlaceholderProvider provider);
+    public void registerContextPlaceholder(String var1, ContextPlaceholderProvider var2);
 
-    void unregisterContextPlaceholder(String key);
+    public void unregisterContextPlaceholder(String var1);
 
-    String applyContextPlaceholders(CommandSender sender, Player viewer, String text, String rawMessage);
+    public String applyContextPlaceholders(CommandSender var1, Player var2, String var3, String var4);
 
-    void registerAudienceResolver(AudienceResolver resolver);
+    public void registerAudienceResolver(AudienceResolver var1);
 
-    void unregisterAudienceResolver(String resolverId);
+    public void unregisterAudienceResolver(String var1);
 
-    Set<Player> resolveBroadcastRecipients(CommandSender sender, String message, Set<Player> defaultRecipients);
+    public Set<Player> resolveBroadcastRecipients(CommandSender var1, String var2, Set<Player> var3);
 
-    void registerActionHandler(String actionId, ActionHandler handler);
+    public void registerActionHandler(String var1, ActionHandler var2);
 
-    void unregisterActionHandler(String actionId);
+    public void unregisterActionHandler(String var1);
 
-    boolean executeAction(String actionId, ActionExecutionContext context);
+    public boolean executeAction(String var1, ActionExecutionContext var2);
 }
+

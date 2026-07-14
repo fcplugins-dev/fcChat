@@ -1,5 +1,9 @@
+
 package fc.plugins.fcchat.api.actions;
 
+import fc.plugins.fcchat.api.actions.ActionExecutionContext;
+
 public interface ActionHandler {
-    void execute(ActionExecutionContext context);
+    public void execute(ActionExecutionContext var1);
 }
+

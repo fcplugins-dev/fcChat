@@ -1,14 +1,15 @@
+
 package fc.plugins.fcchat.api.audience;
 
+import java.util.Set;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Set;
-
 public interface AudienceResolver {
-    String getId();
+    public String getId();
 
-    int getPriority();
+    public int getPriority();
 
-    Set<Player> resolveRecipients(CommandSender sender, String message, Set<Player> currentRecipients);
+    public Set<Player> resolveRecipients(CommandSender var1, String var2, Set<Player> var3);
 }
+

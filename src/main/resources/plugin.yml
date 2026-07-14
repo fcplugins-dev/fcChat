@@ -1,25 +1,42 @@
 name: fcChat
-version: '${project.version}'
+version: '2.4'
 main: fc.plugins.fcchat.FcChat
 api-version: '1.16'
+folia-supported: true
 prefix: fcChat
-softdepend: [PlaceholderAPI, LuckPerms]
+softdepend: [PlaceholderAPI, LuckPerms, DiscordSRV]
+load: STARTUP
 authors: [fcPlugins]
-description: Multifunctional chat plugin
+description: Multifunctional chat plugin with Folia support
 website: https://t.me/fcplugins_minecraft
 commands:
   fcchat:
     description: Plugin management command
     permission: fcchat.use
+  clear:
+    description: Clear chat command
+    permission: fcchat.clear
+  channel:
+    description: Channel switching command
+    permission: fcchat.use
+  msg:
+    description: Send private message to player
+    permission: fcchat.msg
+    aliases: [tell, whisper, w]
+  r:
+    description: Reply to last private message
+    permission: fcchat.reply
+    aliases: [reply]
+  broadcast:
+    description: Broadcast message to all players
+    permission: fcchat.broadcast
+    aliases: [bc, announce]
 permissions:
   fcchat.use:
     description: Allows using basic plugin commands
     default: true
   fcchat.reload:
     description: Allows reloading plugin configuration
-    default: op
-  fcchat.spy:
-    description: Allows using spy function to view private messages
     default: op
   fcchat.hidden:
     description: Allows using message masking
@@ -48,13 +65,45 @@ permissions:
   fcchat.ping.everyone:
     description: Allows using @everyone ping
     default: op
+  fcchat.channel.admin:
+    description: Allows using admin channel
+    default: op
+  fcchat.channel.clan:
+    description: Allows using clan channel
+    default: true
+  fcchat.msg:
+    description: Allows sending private messages
+    default: true
+  fcchat.reply:
+    description: Allows replying to private messages
+    default: true
+  fcchat.broadcast:
+    description: Allows making broadcasts
+    default: op
+  fcchat.ai.manage:
+    description: Allows managing AI moderator
+    default: op
+  fcchat.ai.logger:
+    description: Receive AI moderation logger messages
+    default: op
+  fcchat.action.copy:
+    description: Allows using copy action
+    default: op
+  fcchat.action.paste:
+    description: Allows using paste action
+    default: op
+  fcchat.action.command:
+    description: Allows using command action
+    default: op
+  fcchat.action.url:
+    description: Allows using URL open action
+    default: op
   fcchat.admin:
     description: Full plugin administrator rights
     default: op
     children:
       fcchat.use: true
       fcchat.reload: true
-      fcchat.spy: true
       fcchat.hidden: true
       fcchat.copy: true
       fcchat.color: true
@@ -64,3 +113,14 @@ permissions:
       fcchat.clear: true
       fcchat.ping: true
       fcchat.ping.everyone: true
+      fcchat.channel.admin: true
+      fcchat.channel.clan: true
+      fcchat.msg: true
+      fcchat.reply: true
+      fcchat.broadcast: true
+      fcchat.ai.manage: true
+      fcchat.ai.logger: true
+      fcchat.action.copy: true
+      fcchat.action.paste: true
+      fcchat.action.command: true
+      fcchat.action.url: true

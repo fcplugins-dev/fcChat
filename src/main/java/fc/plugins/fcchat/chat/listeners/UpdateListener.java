@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.chat.listeners;
 
 import fc.plugins.fcchat.FcChat;
@@ -7,7 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 public class UpdateListener
-        implements Listener {
+implements Listener {
     private final FcChat plugin;
 
     public UpdateListener(FcChat plugin) {
@@ -22,3 +23,4 @@ public class UpdateListener
         }
     }
 }
+

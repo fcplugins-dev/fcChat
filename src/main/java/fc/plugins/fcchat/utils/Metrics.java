@@ -3,6 +3,7 @@ package fc.plugins.fcchat.utils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import fc.plugins.fcchat.FcChat;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -59,7 +60,7 @@ public class Metrics {
 
                 try {
                     config.save(configFile);
-                } catch (IOException var9) {
+                } catch (IOException var10) {
                 }
             }
 
@@ -70,16 +71,16 @@ public class Metrics {
             logResponseStatusText = config.getBoolean("logResponseStatusText", false);
             if (this.enabled) {
                 boolean found = false;
-                Iterator var6 = Bukkit.getServicesManager().getKnownServices().iterator();
+                Iterator var7 = Bukkit.getServicesManager().getKnownServices().iterator();
 
-                while(var6.hasNext()) {
-                    Class service = (Class)var6.next();
+                while(var7.hasNext()) {
+                    Class service = (Class)var7.next();
 
                     try {
                         service.getField("B_STATS_VERSION");
                         found = true;
                         break;
-                    } catch (NoSuchFieldException var10) {
+                    } catch (NoSuchFieldException var11) {
                     }
                 }
 
@@ -106,11 +107,16 @@ public class Metrics {
             public void run() {
                 if (!Metrics.this.plugin.isEnabled()) {
                     timer.cancel();
+                } else if (Metrics.this.plugin instanceof FcChat) {
+                    ((FcChat)Metrics.this.plugin).getCompatScheduler().runGlobal(() -> {
+                        Metrics.this.submitData();
+                    });
                 } else {
                     Bukkit.getScheduler().runTask(Metrics.this.plugin, () -> {
                         Metrics.this.submitData();
                     });
                 }
+
             }
         }, 300000L, 1800000L);
     }
@@ -130,7 +136,7 @@ public class Metrics {
         int playerAmount;
         try {
             Method onlinePlayersMethod = Class.forName("org.bukkit.Server").getMethod("getOnlinePlayers");
-            playerAmount = onlinePlayersMethod.getReturnType().equals(Collection.class) ? ((Collection)onlinePlayersMethod.invoke(Bukkit.getServer())).size() : ((Player[])((Player[])onlinePlayersMethod.invoke(Bukkit.getServer()))).length;
+            playerAmount = onlinePlayersMethod.getReturnType().equals(Collection.class) ? ((Collection)onlinePlayersMethod.invoke(Bukkit.getServer())).size() : ((Player[])onlinePlayersMethod.invoke(Bukkit.getServer())).length;
         } catch (Exception var11) {
             playerAmount = Bukkit.getOnlinePlayers().size();
         }
@@ -162,6 +168,7 @@ public class Metrics {
         JsonArray pluginData = new JsonArray();
         Iterator var3 = Bukkit.getServicesManager().getKnownServices().iterator();
 
+        label59:
         while(var3.hasNext()) {
             Class service = (Class)var3.next();
 
@@ -169,8 +176,17 @@ public class Metrics {
                 service.getField("B_STATS_VERSION");
                 Iterator var5 = Bukkit.getServicesManager().getRegistrations(service).iterator();
 
-                while(var5.hasNext()) {
-                    RegisteredServiceProvider provider = (RegisteredServiceProvider)var5.next();
+                while(true) {
+                    Object reg;
+                    do {
+                        if (!var5.hasNext()) {
+                            continue label59;
+                        }
+
+                        reg = var5.next();
+                    } while(!(reg instanceof RegisteredServiceProvider));
+
+                    RegisteredServiceProvider provider = (RegisteredServiceProvider)reg;
 
                     try {
                         Object plugin = provider.getService().getMethod("getPluginData").invoke(provider.getProvider());
@@ -186,16 +202,16 @@ public class Metrics {
                                     JsonObject object = (new JsonParser()).parse(jsonString).getAsJsonObject();
                                     pluginData.add(object);
                                 }
-                            } catch (ClassNotFoundException var12) {
+                            } catch (ClassNotFoundException var13) {
                                 if (logFailedRequests) {
-                                    this.plugin.getLogger().log(Level.SEVERE, "Encountered unexpected exception ", var12);
+                                    this.plugin.getLogger().log(Level.SEVERE, "Encountered unexpected exception ", var13);
                                 }
                             }
                         }
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NullPointerException var13) {
+                    } catch (NoSuchMethodException | NullPointerException | InvocationTargetException | IllegalAccessException var14) {
                     }
                 }
-            } catch (NoSuchFieldException var14) {
+            } catch (NoSuchFieldException var15) {
             }
         }
 

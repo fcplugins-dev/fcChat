@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.api.event;
 
 import org.bukkit.entity.Player;
@@ -5,7 +6,9 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class FcChatChannelSwitchEvent extends Event implements Cancellable {
+public class FcChatChannelSwitchEvent
+extends Event
+implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private final Player player;
     private final String oldChannel;
@@ -20,28 +23,25 @@ public class FcChatChannelSwitchEvent extends Event implements Cancellable {
     }
 
     public Player getPlayer() {
-        return player;
+        return this.player;
     }
 
     public String getOldChannel() {
-        return oldChannel;
+        return this.oldChannel;
     }
 
     public String getNewChannel() {
-        return newChannel;
+        return this.newChannel;
     }
 
-    @Override
     public boolean isCancelled() {
-        return cancelled;
+        return this.cancelled;
     }
 
-    @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
     }
 
-    @Override
     public HandlerList getHandlers() {
         return HANDLERS;
     }
@@ -50,3 +50,4 @@ public class FcChatChannelSwitchEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 }
+

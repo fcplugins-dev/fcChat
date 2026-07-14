@@ -1,13 +1,18 @@
+
 package fc.plugins.fcchat.chat.automessages;
 
 import fc.plugins.fcchat.FcChat;
+import fc.plugins.fcchat.chat.automessages.MessageGroup;
+import fc.plugins.fcchat.utils.concurrent.CompatScheduler;
 import fc.plugins.fcchat.utils.HexUtils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import net.md_5.bungee.api.chat.*;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,8 +23,9 @@ public class AutoMessages {
     private final FcChat plugin;
     private FileConfiguration config;
     private File configFile;
-    private int taskId;
+    private CompatScheduler.ScheduledTask task;
     private final Random random = new Random();
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.builder().character('§').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
     public AutoMessages(FcChat plugin) {
         this.plugin = plugin;
@@ -36,7 +42,10 @@ public class AutoMessages {
             this.config.set("current_index", 1);
             try {
                 this.config.save(this.configFile);
-            } catch (Exception e) {}
+            }
+            catch (Exception exception) {
+                // empty catch block
+            }
         }
     }
 
@@ -45,13 +54,13 @@ public class AutoMessages {
             return;
         }
         int interval = this.getInterval() * 20;
-        this.taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(this.plugin, this::sendMessage, interval, interval);
+        this.task = this.plugin.getCompatScheduler().runGlobalTimer(interval, interval, this::sendMessage);
     }
 
     public void stop() {
-        if (this.taskId != 0) {
-            Bukkit.getScheduler().cancelTask(this.taskId);
-            this.taskId = 0;
+        if (this.task != null) {
+            this.task.cancel();
+            this.task = null;
         }
     }
 
@@ -67,7 +76,7 @@ public class AutoMessages {
         }
         String mode = this.getMode();
         MessageGroup messageGroup = null;
-        messageGroup = mode.equals("random") ? this.getRandomMessageGroup() : this.getNextMessageGroup();
+        MessageGroup messageGroup2 = messageGroup = mode.equals("random") ? this.getRandomMessageGroup() : this.getNextMessageGroup();
         if (messageGroup != null) {
             this.sendMessageGroup(messageGroup);
         }
@@ -95,6 +104,7 @@ public class AutoMessages {
             this.config.save(this.configFile);
         }
         catch (Exception exception) {
+            // empty catch block
         }
         return group;
     }
@@ -129,16 +139,18 @@ public class AutoMessages {
                 int index = Integer.parseInt(key.substring(9));
                 maxIndex = Math.max(maxIndex, index);
             }
-            catch (NumberFormatException numberFormatException) {}
+            catch (NumberFormatException numberFormatException) {
+                // empty catch block
+            }
         }
         return maxIndex;
     }
 
     private void sendMessageGroup(MessageGroup group) {
         for (String message : group.getMessages()) {
-            TextComponent component = this.parseMessage(message);
+            Component component = this.parseMessage(message);
             for (Player player : Bukkit.getOnlinePlayers()) {
-                player.spigot().sendMessage(component);
+                player.sendMessage(component);
             }
         }
         try {
@@ -148,10 +160,11 @@ public class AutoMessages {
             }
         }
         catch (IllegalArgumentException illegalArgumentException) {
+            // empty catch block
         }
     }
 
-    private TextComponent parseMessage(String message) {
+    private Component parseMessage(String message) {
         String translatedMessage;
         if (message.contains("{") && message.contains("}")) {
             int startIndex = message.indexOf("{");
@@ -166,7 +179,6 @@ public class AutoMessages {
                 String before = message.substring(0, startIndex);
                 String linkText = message.substring(startIndex + 1, endIndex);
                 String after = message.substring(endIndex + 1);
-                
                 if (linkText.startsWith("http://") || linkText.startsWith("https://")) {
                     int firstColon = linkText.indexOf(":", 8);
                     if (firstColon != -1) {
@@ -196,40 +208,33 @@ public class AutoMessages {
                         text = linkText;
                     }
                 }
-                
-                TextComponent component = new TextComponent();
+                Component component = Component.empty();
                 if (!before.isEmpty() && (translatedBefore = HexUtils.translateAlternateColorCodes(before)) != null) {
-                    BaseComponent[] beforeComponents = TextComponent.fromLegacyText(translatedBefore);
-                    component.addExtra(new TextComponent(beforeComponents));
+                    component = component.append(LEGACY.deserialize(translatedBefore));
                 }
                 if ((translatedText = HexUtils.translateAlternateColorCodes(text)) != null) {
-                    BaseComponent[] textComponents = TextComponent.fromLegacyText(translatedText);
-                    TextComponent clickableText = new TextComponent(textComponents);
+                    Component clickableText = LEGACY.deserialize(translatedText);
                     if (url.startsWith("http")) {
-                        clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+                        clickableText = clickableText.clickEvent(ClickEvent.openUrl(url));
                     } else {
-                        clickableText.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, url));
+                        clickableText = clickableText.clickEvent(ClickEvent.runCommand(url));
                     }
                     if (hoverText != null && !hoverText.isEmpty()) {
                         String translatedHoverText = HexUtils.translateAlternateColorCodes(hoverText);
-                        HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(translatedHoverText).create());
-                        clickableText.setHoverEvent(hoverEvent);
+                        clickableText = clickableText.hoverEvent(HoverEvent.showText(LEGACY.deserialize(translatedHoverText)));
                     }
-                    component.addExtra(clickableText);
+                    component = component.append(clickableText);
                 }
                 if (!after.isEmpty() && (translatedAfter = HexUtils.translateAlternateColorCodes(after)) != null) {
-                    BaseComponent[] afterComponents = TextComponent.fromLegacyText(translatedAfter);
-                    component.addExtra(new TextComponent(afterComponents));
+                    component = component.append(LEGACY.deserialize(translatedAfter));
                 }
                 return component;
             }
         }
         if ((translatedMessage = HexUtils.translateAlternateColorCodes(message)) != null) {
-            BaseComponent[] components = TextComponent.fromLegacyText(translatedMessage);
-            return new TextComponent(components);
+            return LEGACY.deserialize(translatedMessage);
         }
-        BaseComponent[] components = TextComponent.fromLegacyText(message);
-        return new TextComponent(components);
+        return LEGACY.deserialize(message);
     }
 
     public boolean isEnabled() {

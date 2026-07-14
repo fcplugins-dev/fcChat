@@ -1,13 +1,11 @@
+
 package fc.plugins.fcchat.utils.data;
+
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 
 public class PlayerTimeManager {
-    private final Statistic playtimeStatistic;
-
-    public PlayerTimeManager() {
-        this.playtimeStatistic = this.resolvePlaytimeStatistic();
-    }
+    private final Statistic playtimeStatistic = this.resolvePlaytimeStatistic();
 
     public long getTimeSinceFirstJoin(Player player) {
         return this.getWorldPlaytimeMillis(player);
@@ -16,10 +14,12 @@ public class PlayerTimeManager {
     private Statistic resolvePlaytimeStatistic() {
         try {
             return Statistic.valueOf("PLAY_ONE_MINUTE");
-        } catch (IllegalArgumentException ignored) {
+        }
+        catch (IllegalArgumentException ignored) {
             try {
                 return Statistic.valueOf("PLAY_ONE_TICK");
-            } catch (IllegalArgumentException ignoredToo) {
+            }
+            catch (IllegalArgumentException ignoredToo) {
                 return Statistic.PLAY_ONE_MINUTE;
             }
         }
@@ -28,9 +28,11 @@ public class PlayerTimeManager {
     private long getWorldPlaytimeMillis(Player player) {
         try {
             int ticks = player.getStatistic(this.playtimeStatistic);
-            return ticks * 50L;
-        } catch (Exception ignored) {
+            return (long)ticks * 50L;
+        }
+        catch (Exception ignored) {
             return 0L;
         }
     }
 }
+

@@ -1,3 +1,4 @@
+
 package fc.plugins.fcchat.utils.function.chatgame;
 
 import fc.plugins.fcchat.FcChat;
@@ -7,8 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import fc.plugins.fcchat.utils.concurrent.CompatScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,17 +19,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.scheduler.BukkitTask;
 
 public class ChatGame
-        implements Listener {
+implements Listener {
     private final FcChat plugin;
     private final File configFile;
     private FileConfiguration config;
     private final Random random = new Random();
     private final Map<String, Object> currentGame = new HashMap<String, Object>();
-    private BukkitTask gameTask;
-    private BukkitTask gameDurationTask;
+    private CompatScheduler.ScheduledTask gameTask;
+    private CompatScheduler.ScheduledTask gameDurationTask;
     private boolean gameActive = false;
 
     public ChatGame(FcChat plugin) {
@@ -56,7 +58,7 @@ public class ChatGame
             return;
         }
         int interval = this.config.getInt("settings.timer") * 20;
-        this.gameTask = Bukkit.getScheduler().runTaskTimer(this.plugin, this::startRandomGame, interval, interval);
+        this.gameTask = this.plugin.getCompatScheduler().runGlobalTimer(interval, interval, this::startRandomGame);
     }
 
     private void stopGameTimer() {
@@ -72,16 +74,38 @@ public class ChatGame
             return;
         }
         String[] gameTypes = new String[]{"math", "word", "question"};
-        switch (gameType = gameTypes[this.random.nextInt(gameTypes.length)]) {
-            case "math": {
+        String string = gameType = gameTypes[this.random.nextInt(gameTypes.length)];
+        int n = -1;
+        switch (gameType.hashCode()) {
+            case -1165870106: {
+                if (string.equals("question")) {
+                    n = 1;
+                }
+                break;
+            }
+            case 3344136: {
+                if (string.equals("math")) {
+                    n = 2;
+                }
+                break;
+            }
+            case 3655434: {
+                if (string.equals("word")) {
+                    n = 3;
+                }
+                break;
+            }
+        }
+        switch (n) {
+            case 2: {
                 this.startMathGame();
                 break;
             }
-            case "word": {
+            case 3: {
                 this.startWordGame();
                 break;
             }
-            case "question": {
+            case 1: {
                 this.startQuestionGame();
             }
         }
@@ -96,7 +120,7 @@ public class ChatGame
         if (problems.isEmpty()) {
             return;
         }
-        String problem = (String)problems.get(this.random.nextInt(problems.size()));
+        String problem = problems.get(this.random.nextInt(problems.size()));
         String[] parts = problem.split(":");
         if (parts.length != 2) {
             return;
@@ -123,7 +147,7 @@ public class ChatGame
         if (words.isEmpty()) {
             return;
         }
-        String word = (String)words.get(this.random.nextInt(words.size()));
+        String word = words.get(this.random.nextInt(words.size()));
         String scrambled = this.scrambleWord(word);
         this.currentGame.put("type", "word");
         this.currentGame.put("answer", word.toLowerCase());
@@ -145,7 +169,7 @@ public class ChatGame
         if (questions.isEmpty()) {
             return;
         }
-        String questionAnswer = (String)questions.get(this.random.nextInt(questions.size()));
+        String questionAnswer = questions.get(this.random.nextInt(questions.size()));
         String[] parts = questionAnswer.split(":");
         if (parts.length != 2) {
             return;
@@ -165,29 +189,31 @@ public class ChatGame
 
     private String scrambleWord(String word) {
         char[] chars = word.toCharArray();
-        for (int i = 0; i < chars.length; ++i) {
+        int i = 0;
+        while (i < chars.length) {
             int randomIndex = this.random.nextInt(chars.length);
             char temp = chars[i];
             chars[i] = chars[randomIndex];
             chars[randomIndex] = temp;
+            ++i;
         }
         return new String(chars);
     }
 
     private void scheduleGameEnd() {
         int duration = this.config.getInt("settings.game-duration") * 20;
-        this.gameDurationTask = Bukkit.getScheduler().runTaskLater(this.plugin, this::endGame, duration);
+        this.gameDurationTask = this.plugin.getCompatScheduler().runGlobalLater(duration, this::endGame);
     }
 
     private void endGame() {
         if (!this.gameActive) {
             return;
         }
-        String gameType = (String)this.currentGame.get("type");
+        String gameType = (String) this.currentGame.get("type");
         ConfigurationSection section = this.config.getConfigurationSection("games." + gameType);
         if (section != null) {
-            List<String> endMessages = section.getStringList("end-messages");
-            String answer = (String)this.currentGame.get("answer");
+        List<String> endMessages = section.getStringList("end-messages");
+        String answer = (String) this.currentGame.get("answer");
             for (String message : endMessages) {
                 this.broadcastMessage(message.replace("{answer}", answer));
             }
@@ -207,13 +233,13 @@ public class ChatGame
         }
         Player player = event.getPlayer();
         String message = event.getMessage().toLowerCase().trim();
-        String answer = (String)this.currentGame.get("answer");
+        String answer = (String) this.currentGame.get("answer");
         if (answer != null && message.equals(answer)) {
             event.setCancelled(true);
-            String gameType = (String)this.currentGame.get("type");
+        String gameType = (String) this.currentGame.get("type");
             ConfigurationSection section = this.config.getConfigurationSection("games." + gameType);
             if (section != null) {
-                List<String> winMessages = section.getStringList("win-messages");
+        List<String> winMessages = section.getStringList("win-messages");
                 for (String winMessage : winMessages) {
                     this.broadcastMessage(winMessage.replace("{player}", player.getName()).replace("{answer}", answer));
                 }
@@ -231,7 +257,9 @@ public class ChatGame
     private void executeRewards(Player player, ConfigurationSection section) {
         List<String> rewards = section.getStringList("rewards");
         for (String reward : rewards) {
-            Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), reward.replace("{player}", player.getName())));
+            this.plugin.getCompatScheduler().runGlobal(() -> {
+                boolean bl = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), reward.replace("{player}", player.getName()));
+            });
         }
     }
 
@@ -250,7 +278,9 @@ public class ChatGame
                 player.playSound(player.getLocation(), sound, volume, pitch);
             }
         }
-        catch (IllegalArgumentException illegalArgumentException) {}
+        catch (IllegalArgumentException illegalArgumentException) {
+            // empty catch block
+        }
     }
 
     public void stop() {

@@ -1,12 +1,12 @@
+
 package fc.plugins.fcchat.moderation;
 
-import fc.plugins.fcchat.config.ConfigManager;
+import fc.plugins.fcchat.manager.config.ConfigManager;
+import java.io.File;
+import java.util.regex.Pattern;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import java.io.File;
-import java.util.List;
-import java.util.regex.Pattern;
+import org.bukkit.entity.Player;
 
 public class LinkBlocker {
     private final ConfigManager configManager;
@@ -15,70 +15,64 @@ public class LinkBlocker {
 
     public LinkBlocker(ConfigManager configManager) {
         this.configManager = configManager;
-        loadModerationConfig();
+        this.loadModerationConfig();
     }
 
     private void loadModerationConfig() {
-        moderationFile = new File(configManager.getPlugin().getDataFolder(), "moderation.yml");
-        if (!moderationFile.exists()) {
-            configManager.getPlugin().saveResource("moderation.yml", false);
+        this.moderationFile = new File(this.configManager.getPlugin().getDataFolder(), "moderation.yml");
+        if (!this.moderationFile.exists()) {
+            this.configManager.getPlugin().saveResource("moderation.yml", false);
         }
-        moderationConfig = YamlConfiguration.loadConfiguration(moderationFile);
+        this.moderationConfig = YamlConfiguration.loadConfiguration(this.moderationFile);
     }
 
     public void reloadModeration() {
-        loadModerationConfig();
+        this.loadModerationConfig();
     }
 
     public boolean isLinkBlockingEnabled() {
-        return moderationConfig.getBoolean("link-blocking.enabled");
+        return this.moderationConfig.getBoolean("link-blocking.enabled");
     }
 
     public boolean isIPBlockingEnabled() {
-        return moderationConfig.getBoolean("ip-blocking.enabled");
+        return this.moderationConfig.getBoolean("ip-blocking.enabled");
     }
 
     public String getBlockedMessage() {
-        return moderationConfig.getString("blocked-message");
+        return this.moderationConfig.getString("blocked-message");
     }
 
     public boolean containsLinks(String message) {
-        if (!isLinkBlockingEnabled()) {
+        if (!this.isLinkBlockingEnabled()) {
             return false;
         }
-
         String lowerMessage = message.toLowerCase();
-        
         if (Pattern.compile("https?://").matcher(lowerMessage).find()) {
             return true;
         }
-
-        if (lowerMessage.contains("www.")) {
-            return true;
-        }
-
-        return false;
+        return lowerMessage.contains("www.");
     }
 
     public boolean containsIP(String message) {
-        if (!isIPBlockingEnabled()) {
+        if (!this.isIPBlockingEnabled()) {
             return false;
         }
-
         String lowerMessage = message.toLowerCase();
-        
         if (Pattern.compile("\\b[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b").matcher(lowerMessage).find()) {
             return true;
         }
-
-        if (Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b").matcher(message).find()) {
-            return true;
-        }
-
-        return false;
+        return Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b").matcher(message).find();
     }
 
     public boolean isBlocked(String message) {
-        return containsLinks(message) || containsIP(message);
+        return this.containsLinks(message) || this.containsIP(message);
     }
-} 
+
+    public boolean isBlocked(String message, Player player) {
+        if (player.hasPermission("fcchat.bypass")) {
+            return false;
+        }
+        return this.containsLinks(message) || this.containsIP(message);
+    }
+}
+

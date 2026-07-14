@@ -1,38 +1,37 @@
+
 package fc.plugins.fcchat.utils.function;
 
 import fc.plugins.fcchat.manager.config.ConfigManager;
 import fc.plugins.fcchat.utils.HexUtils;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class Copy {
     private final ConfigManager configManager;
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.builder().character('§').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
     public Copy(ConfigManager configManager) {
         this.configManager = configManager;
     }
 
-    public TextComponent createClickableMessage(String message, String originalText) {
-        TextComponent component = new TextComponent(TextComponent.fromLegacyText(message));
-        component.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, originalText));
+    public Component createClickableMessage(String message, String originalText) {
+        Component component = LEGACY.deserialize(message).clickEvent(ClickEvent.copyToClipboard(originalText));
         String hoverText = this.configManager.getCopyHoverText();
-        if (hoverText != null && !hoverText.isEmpty()) {
+        if (hoverText != null && !hoverText.isEmpty() && component.hoverEvent() == null) {
             String coloredHoverText = HexUtils.translateAlternateColorCodes(hoverText);
-            HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(coloredHoverText).create());
-            component.setHoverEvent(hoverEvent);
+            component = component.hoverEvent(HoverEvent.showText(LEGACY.deserialize(coloredHoverText)));
         }
         return component;
     }
 
-    public TextComponent addClickEvent(TextComponent component, String originalText) {
-        component.setClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, originalText));
+    public Component addClickEvent(Component component, String originalText) {
+        component = component.clickEvent(ClickEvent.copyToClipboard(originalText));
         String hoverText = this.configManager.getCopyHoverText();
-        if (hoverText != null && !hoverText.isEmpty()) {
+        if (hoverText != null && !hoverText.isEmpty() && component.hoverEvent() == null) {
             String coloredHoverText = HexUtils.translateAlternateColorCodes(hoverText);
-            HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(coloredHoverText).create());
-            component.setHoverEvent(hoverEvent);
+            component = component.hoverEvent(HoverEvent.showText(LEGACY.deserialize(coloredHoverText)));
         }
         return component;
     }
