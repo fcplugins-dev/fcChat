@@ -1,0 +1,16 @@
+# Для кланового чата используется интеграция с плагином кланов.
+# Канал с id "clan" автоматически считается клановым.
+# Интеграция включается в config.yml: TowerClans: true (или hClans: true).
+
+channels:
+  admin:
+    name: "Admin"
+    format: "&cⒶ {player}&f%suffix%: &7{message}"
+    permission: "fcchat.channel.admin"
+    symbol: "#"
+    enabled: true
+  clan:
+    name: "Clan"
+    format: "&6Ⓒ {player}&f%suffix%: &7{message}"
+    symbol: "@"
+    enabled: true

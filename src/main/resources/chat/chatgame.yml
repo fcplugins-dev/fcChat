@@ -1,0 +1,105 @@
+settings:
+  enabled: true  # Enable/disable chat games
+  timer: 900  # Time between games in seconds
+  game-duration: 60  # Game duration in seconds
+  sound:
+    type: "BLOCK_NOTE_BLOCK_PLING"
+    volume: 1.0
+    pitch: 1.0
+
+games:
+  math:
+    start-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                         &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f             &9📊 &fSolve the equation&9: {expression} &f= &9?"
+      - "&9&n▌&f         &9💰 &fFirst correct answer gets a reward&9!"
+      - "&9&n▌&f"
+    win-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                       &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f           &9🎉 &fPlayer &9{player} &fwon&9!"
+      - "&9&n▌&f               &9📊 &fThe answer was&9: {answer}"
+      - "&9&n▌&f"
+    end-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                       &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f             &9⏰ &fTime's up&9!"
+      - "&9&n▌&f             &9📊 &fCorrect answer&9: {answer}"
+      - "&9&n▌&f"
+    problems:
+      - "15 + 27:42"
+      - "68 - 34:34"
+      - "12 * 8:96"
+      - "144 / 12:12"
+      - "25 + 35 - 18:42"
+      - "8 * 7 - 21:35"
+    rewards:
+      - "eco give {player} 100"
+      - "give {player} diamond 1"
+
+  word:
+    start-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                             &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f                   &9📝 &fUnscramble the word&9: {word}"
+      - "&9&n▌&f              &9💰 &fFirst correct answer gets a reward&9!"
+      - "&9&n▌&f"
+    win-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                           &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f                &9🎉 &fPlayer &9{player} &fwon&9!"
+      - "&9&n▌&f                     &9📝 &fThe word&9: {answer}"
+      - "&9&n▌&f"
+    end-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                         &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f                 &9⏰ &fTime's up&9!"
+      - "&9&n▌&f               &9📝 &fCorrect word&9: {answer}"
+      - "&9&n▌&f"
+    words:
+      - "minecraft"
+      - "diamond"
+      - "creeper"
+      - "redstone"
+      - "enchant"
+      - "nether"
+    rewards:
+      - "eco give {player} 150"
+      - "give {player} emerald 1"
+
+  question:
+    start-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                       &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f                  &9❓ &fQuestion&9: {question}"
+      - "&9&n▌&f          &9💰 &fFirst correct answer gets a reward&9!"
+      - "&9&n▌&f"
+    win-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                        &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f             &9🎉 &fPlayer &9{player} &fwon&9!"
+      - "&9&n▌&f                  &9❓ &fThe answer was&9: {answer}"
+      - "&9&n▌&f"
+    end-messages:
+      - "&9&n▌&f"
+      - "&9&n▌&f                         &9&lChat Game"
+      - "&9&n▌&f"
+      - "&9&n▌&f                  &9⏰ &fTime's up&9!"
+      - "&9&n▌&f                &9❓ &fCorrect answer&9: {answer}"
+      - "&9&n▌&f"
+    questions:
+      - "How many blocks in a stack?:64"
+      - "Which animal gives leather?:cow"
+      - "How many ender eyes needed to activate portal?:12"
+    rewards:
+      - "eco give {player} 200"
+      - "give {player} gold_ingot 2"

@@ -1,0 +1,507 @@
+
+package fc.plugins.fcchat.manager.config;
+
+import fc.plugins.fcchat.FcChat;
+import fc.plugins.fcchat.integration.HClansIntegration;
+import fc.plugins.fcchat.integration.LuckPermsIntegration;
+import fc.plugins.fcchat.integration.PlaceholderAPIIntegration;
+import fc.plugins.fcchat.integration.TowerClansIntegration;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+public class ConfigManager {
+    private final FcChat plugin;
+    private FileConfiguration config;
+    private FileConfiguration messages;
+    private FileConfiguration moderation;
+    private FileConfiguration privateMessages;
+    private File messagesFile;
+    private File moderationFile;
+    private File privateMessagesFile;
+    private File promptFile;
+    private String aiModeratorPrompt;
+    private File verdictPromptFile;
+    private String verdictPrompt;
+    private LuckPermsIntegration luckPermsIntegration;
+    private PlaceholderAPIIntegration placeholderAPI;
+    private TowerClansIntegration towerClansIntegration;
+    private HClansIntegration hClansIntegration;
+    private String cachedLocalFormat;
+    private String cachedGlobalFormat;
+    private String cachedChatPrefix;
+    private int cachedLocalRadius;
+    private boolean cachedColorChat;
+    private boolean cachedHiddenText;
+    private boolean cachedHologramEnabled;
+
+    public ConfigManager(FcChat plugin) {
+        this.plugin = plugin;
+        this.loadConfig();
+        this.loadMessages();
+        this.loadModeration();
+        this.loadPrivateMessages();
+        this.loadPrompt();
+        this.loadVerdictPrompt();
+        this.luckPermsIntegration = new LuckPermsIntegration();
+        this.placeholderAPI = new PlaceholderAPIIntegration();
+        this.towerClansIntegration = new TowerClansIntegration();
+        this.hClansIntegration = new HClansIntegration();
+        this.cacheValues();
+    }
+
+    public void loadConfig() {
+        this.plugin.saveDefaultConfig();
+        this.config = this.plugin.getConfig();
+    }
+
+    public void loadMessages() {
+        this.messagesFile = new File(this.plugin.getDataFolder(), "messages.yml");
+        if (!this.messagesFile.exists()) {
+            this.plugin.saveResource("messages.yml", false);
+        }
+        this.messages = YamlConfiguration.loadConfiguration(this.messagesFile);
+    }
+
+    public void loadModeration() {
+        this.moderationFile = new File(this.plugin.getDataFolder(), "core/moderation.yml");
+        if (!this.moderationFile.exists()) {
+            this.plugin.saveResource("core/moderation.yml", false);
+        }
+        this.moderation = YamlConfiguration.loadConfiguration(this.moderationFile);
+    }
+
+    public void loadPrivateMessages() {
+        this.privateMessagesFile = new File(this.plugin.getDataFolder(), "chat/private-messages.yml");
+        if (!this.privateMessagesFile.exists()) {
+            this.plugin.saveResource("chat/private-messages.yml", false);
+        }
+        this.privateMessages = YamlConfiguration.loadConfiguration(this.privateMessagesFile);
+    }
+
+    public void loadPrompt() {
+        this.promptFile = new File(this.plugin.getDataFolder(), "core/prompt.txt");
+        if (!this.promptFile.exists()) {
+            this.plugin.saveResource("core/prompt.txt", false);
+        }
+        try {
+            this.aiModeratorPrompt = new String(Files.readAllBytes(this.promptFile.toPath()), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            this.aiModeratorPrompt = "";
+            this.plugin.getLogger().severe("Failed to load core/prompt.txt: " + e.getMessage());
+        }
+    }
+
+    public void loadVerdictPrompt() {
+        this.verdictPromptFile = new File(this.plugin.getDataFolder(), "core/verdict-prompt.txt");
+        if (!this.verdictPromptFile.exists()) {
+            this.plugin.saveResource("core/verdict-prompt.txt", false);
+        }
+        try {
+            this.verdictPrompt = new String(Files.readAllBytes(this.verdictPromptFile.toPath()), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            this.verdictPrompt = "";
+            this.plugin.getLogger().severe("Failed to load core/verdict-prompt.txt: " + e.getMessage());
+        }
+    }
+
+    public String getMessage(String path) {
+        return this.messages.getString(path);
+    }
+
+    private void cacheValues() {
+        this.cachedLocalFormat = this.config.getString("local-chat.format");
+        this.cachedGlobalFormat = this.config.getString("global-chat.format");
+        this.cachedChatPrefix = this.config.getString("chat.prefix");
+        this.cachedLocalRadius = this.config.getInt("local-chat.radius");
+        this.cachedColorChat = this.config.getBoolean("color-chat.enabled");
+        this.cachedHiddenText = this.config.getBoolean("hidden-text.enabled");
+        this.cachedHologramEnabled = this.config.getBoolean("hologram-messages.enabled");
+    }
+
+    public void reloadConfig() {
+        this.plugin.reloadConfig();
+        this.config = this.plugin.getConfig();
+        this.loadMessages();
+        this.loadModeration();
+        this.loadPrivateMessages();
+        this.loadPrompt();
+        this.loadVerdictPrompt();
+        this.cacheValues();
+        if (this.plugin.getChatManager() != null) {
+            this.plugin.getChatManager().reloadModeration();
+        }
+    }
+
+    public int getLocalChatRadius() {
+        return this.cachedLocalRadius;
+    }
+
+    public String getChatPrefix() {
+        return this.cachedChatPrefix;
+    }
+
+    public String getLocalChatFormat() {
+        return this.cachedLocalFormat;
+    }
+
+    public String getGlobalChatFormat() {
+        return this.cachedGlobalFormat;
+    }
+
+    public boolean isColorChatEnabled() {
+        return this.cachedColorChat;
+    }
+
+    public String getColorChatPermission() {
+        return this.config.getString("color-chat.permission");
+    }
+
+    public boolean isHiddenTextEnabled() {
+        return this.cachedHiddenText;
+    }
+
+    public String getHiddenTextPermission() {
+        return this.config.getString("hidden-text.permission");
+    }
+
+    public String getHiddenTextSymbol() {
+        return this.config.getString("hidden-text.symbol");
+    }
+
+    public int getHiddenTextLength() {
+        return this.config.getInt("hidden-text.length");
+    }
+
+    public boolean isAntiSpamEnabled() {
+        return this.moderation.getBoolean("anti-spam.enabled");
+    }
+
+    public double getAntiSpamCooldown() {
+        return this.moderation.getDouble("anti-spam.cooldown");
+    }
+
+    public String getAntiSpamMessage() {
+        return this.moderation.getString("anti-spam.message");
+    }
+
+    public boolean isNewPlayerChatEnabled() {
+        return this.moderation.getBoolean("new-player-chat.enabled");
+    }
+
+    public int getNewPlayerBlockTime() {
+        return this.moderation.getInt("new-player-chat.block-time");
+    }
+
+    public String getNewPlayerMessage() {
+        return this.moderation.getString("new-player-chat.message");
+    }
+
+    public String getAntiSpamBypassPermission() {
+        return this.moderation.getString("anti-spam.bypass-permission");
+    }
+
+    public String getNewPlayerBypassPermission() {
+        return this.moderation.getString("new-player-chat.bypass-permission");
+    }
+
+    public boolean isAntiCapsEnabled() {
+        return this.moderation.getBoolean("anti-caps.enabled");
+    }
+
+    public int getAntiCapsPercent() {
+        return this.moderation.getInt("anti-caps.percent");
+    }
+
+    public String getAntiCapsMode() {
+        return this.moderation.getString("anti-caps.mode");
+    }
+
+    public String getAntiCapsMessage() {
+        return this.moderation.getString("anti-caps.message");
+    }
+
+    public String getAntiCapsBypassPermission() {
+        return this.moderation.getString("anti-caps.bypass-permission");
+    }
+
+    public boolean isAiModeratorEnabled() {
+        return this.moderation.getBoolean("ai-moderator.enabled");
+    }
+
+    public boolean isAiModeratorDebugEnabled() {
+        return this.moderation.getBoolean("ai-moderator.debug");
+    }
+
+    public String getAiModeratorEndpoint() {
+        return this.moderation.getString("ai-moderator.endpoint");
+    }
+
+    public String getAiModeratorApiKey() {
+        return this.moderation.getString("ai-moderator.api-key");
+    }
+
+    public String getAiModeratorModel() {
+        return this.moderation.getString("ai-moderator.model");
+    }
+
+    public String getAiModeratorBlockedMessage() {
+        return this.moderation.getString("ai-moderator.blocked-message");
+    }
+
+    public boolean isAiModeratorToxicityEnabled() {
+        return this.moderation.getBoolean("ai-moderator.toxicity.enabled");
+    }
+
+    public boolean isAiModeratorStatisticsEnabled() {
+        return this.moderation.getBoolean("ai-moderator.statistics.enabled");
+    }
+
+    public int getAiModeratorStatisticsHistoryLimit() {
+        return this.moderation.getInt("ai-moderator.statistics.history-limit", 50);
+    }
+
+    public int getAiModeratorStatisticsVerdictInterval() {
+        return this.moderation.getInt("ai-moderator.statistics.verdict-interval", 25);
+    }
+
+    public String getVerdictPrompt() {
+        return this.verdictPrompt;
+    }
+
+    public boolean isAiModeratorLoggerEnabledByDefault() {
+        return this.moderation.getBoolean("ai-moderator.logger.enabled");
+    }
+
+    public String getAiModeratorLoggerPermission() {
+        return this.moderation.getString("ai-moderator.logger.permission");
+    }
+
+    public String getAiModeratorLoggerMessage() {
+        return this.moderation.getString("ai-moderator.logger.message");
+    }
+
+    public String getAiModeratorLoggerHoverMessage() {
+        return this.moderation.getString("ai-moderator.logger.hover-message");
+    }
+
+    public String getAiModeratorPrompt() {
+        return this.aiModeratorPrompt;
+    }
+
+    public LuckPermsIntegration getLuckPermsIntegration() {
+        return this.luckPermsIntegration;
+    }
+
+    public PlaceholderAPIIntegration getPlaceholderAPI() {
+        return this.placeholderAPI;
+    }
+
+    public TowerClansIntegration getTowerClansIntegration() {
+        return this.towerClansIntegration;
+    }
+
+    public HClansIntegration getHClansIntegration() {
+        return this.hClansIntegration;
+    }
+
+    public boolean isTowerClansEnabled() {
+        return this.config.getBoolean("TowerClans", false);
+    }
+
+    public boolean isHClansEnabled() {
+        return this.config.getBoolean("hClans", false);
+    }
+
+    public boolean isDiscordSrvEnabled() {
+        return this.config.getBoolean("DiscordSRV", false);
+    }
+
+    public boolean isPlayerInfoEnabled() {
+        return this.config.getBoolean("player-info.enabled");
+    }
+
+    public String getPlayerInfoPermission() {
+        return this.config.getString("player-info.permission");
+    }
+
+    public List<String> getPlayerInfoLines() {
+        return this.config.getStringList("player-info.lines");
+    }
+
+    public FcChat getPlugin() {
+        return this.plugin;
+    }
+
+    public boolean updateCheck() {
+        return this.config.getBoolean("update-check");
+    }
+
+    public List<String> getDisabledWorlds() {
+        return this.config.getStringList("disabled-worlds");
+    }
+
+    public boolean isJoinLeaveMessagesEnabled() {
+        return this.config.getBoolean("join-leave-messages.enabled");
+    }
+
+    public String getJoinMessage() {
+        return this.config.getString("join-leave-messages.join.message");
+    }
+
+    public String getJoinSound() {
+        return this.config.getString("join-leave-messages.join.sound");
+    }
+
+    public String getLeaveMessage() {
+        return this.config.getString("join-leave-messages.leave.message");
+    }
+
+    public String getLeaveSound() {
+        return this.config.getString("join-leave-messages.leave.sound");
+    }
+
+    public boolean isHologramMessagesEnabled() {
+        return this.cachedHologramEnabled;
+    }
+
+    public int getHologramDuration() {
+        return this.config.getInt("hologram-messages.duration");
+    }
+
+    public int getHologramMaxWordsPerLine() {
+        return this.config.getInt("hologram-messages.max-words-per-line");
+    }
+
+    public double getHologramHeight() {
+        return this.config.getDouble("hologram-messages.height");
+    }
+
+    public String getHologramMessageFormat() {
+        return this.config.getString("hologram-messages.format");
+    }
+
+    public boolean isMessageSoundEnabled() {
+        return this.config.getBoolean("sounds.message.enabled");
+    }
+
+    public String getMessageSound() {
+        return this.config.getString("sounds.message.sound");
+    }
+
+    public float getMessageSoundVolume() {
+        return (float)this.config.getDouble("sounds.message.volume");
+    }
+
+    public float getMessageSoundPitch() {
+        return (float)this.config.getDouble("sounds.message.pitch");
+    }
+
+    public boolean isPingSystemEnabled() {
+        return this.config.getBoolean("ping-system.enabled");
+    }
+
+    public String getPingSymbol() {
+        return this.config.getString("ping-system.symbol");
+    }
+
+    public String getPingPermission() {
+        return this.config.getString("ping-system.permission");
+    }
+
+    public String getPingColor() {
+        return this.config.getString("ping-system.ping-color");
+    }
+
+    public boolean isPingSoundEnabled() {
+        return this.config.getBoolean("sounds.ping.enabled");
+    }
+
+    public String getPingSound() {
+        return this.config.getString("sounds.ping.sound");
+    }
+
+    public float getPingSoundVolume() {
+        return (float)this.config.getDouble("sounds.ping.volume");
+    }
+
+    public float getPingSoundPitch() {
+        return (float)this.config.getDouble("sounds.ping.pitch");
+    }
+
+    public String getEveryonePingPermission() {
+        return this.config.getString("ping-system.everyone-permission");
+    }
+
+    public String getEveryonePingColor() {
+        return this.config.getString("ping-system.everyone-ping-color");
+    }
+
+    public boolean isEveryonePingSoundEnabled() {
+        return this.config.getBoolean("sounds.everyone-ping.enabled");
+    }
+
+    public String getEveryonePingSound() {
+        return this.config.getString("sounds.everyone-ping.sound");
+    }
+
+    public float getEveryonePingSoundVolume() {
+        return (float)this.config.getDouble("sounds.everyone-ping.volume");
+    }
+
+    public float getEveryonePingSoundPitch() {
+        return (float)this.config.getDouble("sounds.everyone-ping.pitch");
+    }
+
+    public boolean isCopyEnabled() {
+        return this.config.getBoolean("copy.enabled");
+    }
+
+    public String getCopyPermission() {
+        return this.config.getString("copy.permission");
+    }
+
+    public String getCopyHoverText() {
+        return this.config.getString("copy.hover-text");
+    }
+
+    public boolean isWorldColorsEnabled() {
+        return this.config.getBoolean("world-colors.enabled");
+    }
+
+    public String getWorldColor(String worldName) {
+        return this.config.getString("world-colors.worlds." + worldName, this.getDefaultWorldColor());
+    }
+
+    public String getDefaultWorldColor() {
+        return this.config.getString("world-colors.default-color");
+    }
+
+    public String getEventPriority() {
+        return this.config.getString("event-priority");
+    }
+
+    public FileConfiguration getPrivateMessageConfig() {
+        return this.privateMessages;
+    }
+
+    public boolean isPingToastEnabled() {
+        return this.config.getBoolean("ping-system.toast.enabled");
+    }
+
+    public String getPingToastText() {
+        return this.config.getString("ping-system.toast.text");
+    }
+
+    public boolean isCommandEnabled(String command) {
+        return this.config.getBoolean("commands." + command + ".enabled");
+    }
+
+    public boolean isCommandAliasEnabled(String command, String alias) {
+        return this.config.getBoolean("commands." + command + ".aliases." + alias);
+    }
+}

@@ -1,0 +1,293 @@
+
+package fc.plugins.fcchat.api.internal;
+
+import fc.plugins.fcchat.FcChat;
+import fc.plugins.fcchat.api.FcChatApi;
+import fc.plugins.fcchat.api.actions.ActionExecutionContext;
+import fc.plugins.fcchat.api.actions.ActionHandler;
+import fc.plugins.fcchat.api.audience.AudienceResolver;
+import fc.plugins.fcchat.api.event.FcChatBroadcastEvent;
+import fc.plugins.fcchat.api.event.FcChatChannelSwitchEvent;
+import fc.plugins.fcchat.api.event.FcChatPrivateMessageEvent;
+import fc.plugins.fcchat.api.placeholder.ContextPlaceholderProvider;
+import fc.plugins.fcchat.chat.channel.Channel;
+import fc.plugins.fcchat.chat.channel.ChannelManager;
+import fc.plugins.fcchat.manager.config.ConfigManager;
+import fc.plugins.fcchat.utils.HexUtils;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+public class FcChatApiImpl
+implements FcChatApi {
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.builder().character('\u00A7').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
+    private final FcChat plugin;
+    private final ConfigManager configManager;
+    private final Map<String, ContextPlaceholderProvider> contextPlaceholders;
+    private final Map<String, AudienceResolver> audienceResolvers;
+    private final Map<String, ActionHandler> actionHandlers;
+
+    public FcChatApiImpl(FcChat plugin, ConfigManager configManager) {
+        this.plugin = plugin;
+        this.configManager = configManager;
+        this.contextPlaceholders = new ConcurrentHashMap<String, ContextPlaceholderProvider>();
+        this.audienceResolvers = new ConcurrentHashMap<String, AudienceResolver>();
+        this.actionHandlers = new ConcurrentHashMap<String, ActionHandler>();
+        this.registerBuiltInContextPlaceholders();
+        this.registerBuiltInActionHandlers();
+    }
+
+    @Override
+    public boolean sendBroadcast(CommandSender sender, String message) {
+        String senderName = sender instanceof Player ? sender.getName() : "Console";
+        String broadcastFormat = this.configManager.getPrivateMessageConfig().getString("broadcast.format", "&c[&4BROADCAST&c] &f{message}").replace("{message}", message).replace("{sender}", senderName).replace("{player}", senderName);
+        String formatted = this.applyContextPlaceholders(sender, null, broadcastFormat, message);
+        Set<Player> recipients = this.resolveBroadcastRecipients(sender, message, new HashSet<Player>(Bukkit.getOnlinePlayers()));
+        FcChatBroadcastEvent event = new FcChatBroadcastEvent(sender, message, formatted, recipients, !Bukkit.isPrimaryThread());
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return false;
+        }
+        for (Player player : event.getRecipients()) {
+            String personalized = this.applyContextPlaceholders(sender, player, event.getFormattedMessage(), event.getMessage());
+            player.sendMessage(HexUtils.translateAlternateColorCodes(personalized));
+            this.plugin.getPrivateMessageSoundManager().playBroadcastSound(player);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean sendPrivateMessage(Player sender, Player receiver, String message) {
+        return this.sendDirectMessage(sender, receiver, message, "private-messages", false);
+    }
+
+    @Override
+    public boolean sendReplyMessage(Player sender, Player receiver, String message) {
+        return this.sendDirectMessage(sender, receiver, message, "reply", true);
+    }
+
+    private boolean sendDirectMessage(Player sender, Player receiver, String message, String configPath, boolean replySound) {
+        String senderFormat = this.configManager.getPrivateMessageConfig().getString(configPath + ".format.sender", "&7[&6You &7-> &e{receiver}&7] &f{message}").replace("{receiver}", receiver.getName()).replace("{receiver_group}", this.getPlayerGroup(receiver)).replace("{message}", message).replace("{sender}", sender.getName()).replace("{sender_group}", this.getPlayerGroup(sender));
+        String receiverFormat = this.configManager.getPrivateMessageConfig().getString(configPath + ".format.receiver", "&7[&e{sender} &7-> &6You&7] &f{message}").replace("{sender}", sender.getName()).replace("{sender_group}", this.getPlayerGroup(sender)).replace("{message}", message).replace("{receiver}", receiver.getName()).replace("{receiver_group}", this.getPlayerGroup(receiver));
+        senderFormat = this.applyContextPlaceholders(sender, sender, senderFormat, message);
+        receiverFormat = this.applyContextPlaceholders(sender, receiver, receiverFormat, message);
+        FcChatPrivateMessageEvent event = new FcChatPrivateMessageEvent(sender, receiver, message, senderFormat, receiverFormat, !Bukkit.isPrimaryThread());
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return false;
+        }
+        sender.sendMessage(HexUtils.translateAlternateColorCodes(event.getSenderFormat()));
+        receiver.sendMessage(HexUtils.translateAlternateColorCodes(event.getReceiverFormat()));
+        this.plugin.getPrivateMessageManager().setLastMessenger(receiver.getUniqueId(), sender.getUniqueId());
+        if (replySound) {
+            this.plugin.getPrivateMessageSoundManager().playReplySound(sender, "sender");
+            this.plugin.getPrivateMessageSoundManager().playReplySound(receiver, "receiver");
+        } else {
+            this.plugin.getPrivateMessageSoundManager().playPrivateMessageSound(sender, "sender");
+            this.plugin.getPrivateMessageSoundManager().playPrivateMessageSound(receiver, "receiver");
+        }
+        return true;
+    }
+
+    @Override
+    public void clearChat(CommandSender sender, boolean announce) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            int i = 0;
+            while (i < 100) {
+                player.sendMessage("");
+                ++i;
+            }
+        }
+        if (announce) {
+            String clearMessage = this.configManager.getMessage("clear-chat").replace("{player}", sender.getName());
+            clearMessage = this.applyContextPlaceholders(sender, null, clearMessage, "");
+            String formatted = HexUtils.translateAlternateColorCodes(clearMessage);
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.sendMessage(formatted);
+            }
+            sender.sendMessage(formatted);
+        }
+    }
+
+    @Override
+    public boolean switchChannel(Player player, String channelId) {
+        ChannelManager channelManager = this.plugin.getChatManager().getChannelManager();
+        String targetChannel = channelId == null || channelId.trim().isEmpty() ? "default" : channelId.toLowerCase();
+        if (!"default".equals(targetChannel) && !channelManager.hasChannelPermission(player, targetChannel)) {
+            return false;
+        }
+        String oldChannel = channelManager.getPlayerChannel(player.getUniqueId());
+        FcChatChannelSwitchEvent event = new FcChatChannelSwitchEvent(player, oldChannel, targetChannel, !Bukkit.isPrimaryThread());
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return false;
+        }
+        channelManager.setPlayerChannel(player.getUniqueId(), targetChannel);
+        return true;
+    }
+
+    @Override
+    public String getPlayerChannel(UUID playerId) {
+        return this.plugin.getChatManager().getChannelManager().getPlayerChannel(playerId);
+    }
+
+    @Override
+    public Map<String, Channel> getChannels() {
+        return Collections.unmodifiableMap(this.plugin.getChatManager().getChannelManager().getAllChannels());
+    }
+
+    @Override
+    public boolean isCommandEnabled(String command) {
+        return this.configManager.isCommandEnabled(command);
+    }
+
+    @Override
+    public void registerContextPlaceholder(String key, ContextPlaceholderProvider provider) {
+        if (key == null || provider == null) {
+            return;
+        }
+        this.contextPlaceholders.put(key.toLowerCase(), provider);
+    }
+
+    @Override
+    public void unregisterContextPlaceholder(String key) {
+        if (key == null) {
+            return;
+        }
+        this.contextPlaceholders.remove(key.toLowerCase());
+    }
+
+    @Override
+    public String applyContextPlaceholders(CommandSender sender, Player viewer, String text, String rawMessage) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        String result = text;
+        for (Map.Entry<String, ContextPlaceholderProvider> entry : this.contextPlaceholders.entrySet()) {
+            String key = entry.getKey();
+            String tokenA = "{ctx:" + key + "}";
+            String tokenB = "{context:" + key + "}";
+            if (!result.contains(tokenA) && !result.contains(tokenB)) continue;
+            String replacement = "";
+            try {
+                String resolved = entry.getValue().resolve(sender, viewer, rawMessage);
+                replacement = resolved == null ? "" : resolved;
+            }
+            catch (Exception exception) {
+                // empty catch block
+            }
+            result = result.replace(tokenA, replacement).replace(tokenB, replacement);
+        }
+        return result;
+    }
+
+    @Override
+    public void registerAudienceResolver(AudienceResolver resolver) {
+        if (resolver == null || resolver.getId() == null) {
+            return;
+        }
+        this.audienceResolvers.put(resolver.getId().toLowerCase(), resolver);
+    }
+
+    @Override
+    public void unregisterAudienceResolver(String resolverId) {
+        if (resolverId == null) {
+            return;
+        }
+        this.audienceResolvers.remove(resolverId.toLowerCase());
+    }
+
+    @Override
+    public Set<Player> resolveBroadcastRecipients(CommandSender sender, String message, Set<Player> defaultRecipients) {
+        HashSet<Player> recipients = new HashSet<Player>(defaultRecipients);
+        ArrayList<AudienceResolver> resolvers = new ArrayList<AudienceResolver>(this.audienceResolvers.values());
+        resolvers.sort(Comparator.comparingInt(AudienceResolver::getPriority).reversed());
+        for (AudienceResolver resolver : resolvers) {
+            try {
+                Set<Player> resolved = resolver.resolveRecipients(sender, message, Collections.unmodifiableSet(recipients));
+                if (resolved == null) continue;
+                recipients = new HashSet<Player>(resolved);
+            }
+            catch (Exception exception) {
+                // empty catch block
+            }
+        }
+        return recipients;
+    }
+
+    @Override
+    public void registerActionHandler(String actionId, ActionHandler handler) {
+        if (actionId == null || handler == null) {
+            return;
+        }
+        this.actionHandlers.put(actionId.toLowerCase(), handler);
+    }
+
+    @Override
+    public void unregisterActionHandler(String actionId) {
+        if (actionId == null) {
+            return;
+        }
+        this.actionHandlers.remove(actionId.toLowerCase());
+    }
+
+    @Override
+    public boolean executeAction(String actionId, ActionExecutionContext context) {
+        if (actionId == null || context == null) {
+            return false;
+        }
+        ActionHandler handler = this.actionHandlers.get(actionId.toLowerCase());
+        if (handler == null) {
+            return false;
+        }
+        try {
+            handler.execute(context);
+            return true;
+        }
+        catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private String getPlayerGroup(Player player) {
+        try {
+            return this.configManager.getLuckPermsIntegration().getPrimaryGroup(player, "default");
+        }
+        catch (Exception e) {
+            return "default";
+        }
+    }
+
+    private void registerBuiltInContextPlaceholders() {
+        this.contextPlaceholders.put("sender", (sender, viewer, rawMessage) -> sender == null ? "" : sender.getName());
+        this.contextPlaceholders.put("player", (sender, viewer, rawMessage) -> viewer != null ? viewer.getName() : sender != null ? sender.getName() : "");
+        this.contextPlaceholders.put("message", (sender, viewer, rawMessage) -> rawMessage == null ? "" : rawMessage);
+        this.contextPlaceholders.put("world", (sender, viewer, rawMessage) -> {
+            Player player = viewer != null ? viewer : sender instanceof Player ? (Player)sender : null;
+            return player == null ? "" : player.getWorld().getName();
+        });
+    }
+
+    private void registerBuiltInActionHandlers() {
+        this.actionHandlers.put("copy", context -> {
+            Player player = context.getTarget() != null ? context.getTarget() : context.getSender() instanceof Player ? (Player)context.getSender() : null;
+            if (player == null || context.getMessage() == null) {
+                return;
+            }
+            Component component = LEGACY.deserialize(context.getMessage()).clickEvent(ClickEvent.copyToClipboard(context.getMessage()));
+            player.sendMessage(component);
+        });
+    }
+}
+
